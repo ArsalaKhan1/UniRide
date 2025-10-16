@@ -8,6 +8,7 @@ class User {
 public:
     string userID, name, email;
 
+    User();
     User(string id, string n, string e);
 };
 

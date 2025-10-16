@@ -5,6 +5,7 @@
 #include "RequestQueue.h"
 #include "OTPverification.h"
 #include "ChatFeature.h"
+#include "AuthSys.h"
 using namespace std;
 
 int main()
@@ -12,14 +13,28 @@ int main()
     srand(time(0)); // for OTP generation randomness
 
     // Step 1: Registration
-    // // AuthSystem auth;
-    // // cout << "=== User Registration ===" << endl;
-    // // User u1 = auth.registerUser("U101", "Ali", "ali@university.edu");
-    // // User u2 = auth.registerUser("U102", "Sara", "sara@university.edu");
-    User u1("U101", "Ali", "ali@university.edu");
-    User u2("U102", "Sara", "sara@university.edu");
+    AuthSystem auth;
+    cout << "=== User Registration ===" << endl;
+    User u1 = auth.registerUser("U101", "Ali", "ali@university.edu");
+    User u2 = auth.registerUser("U102", "Sara", "sara@university.edu");
+    auth.displayUsers();
 
-    cout << "Users registered: " << u1.name << " and " << u2.name << endl;
+    cout << "\n=== Login Phase ===" << endl;
+    string loginEmail;
+    cout << "Enter email to login: ";
+    cin >> loginEmail;
+    if (!auth.loginUser(loginEmail)) {
+        cout << "Exiting system..." << endl;
+        return 0;
+    }
+
+    cout << "\n=== Login Phase ===" << endl;
+    cout << "Enter email to login: ";
+    cin >> loginEmail;
+    if (!auth.loginUser(loginEmail)) {
+        cout << "Exiting system..." << endl;
+        return 0;
+    }
 
     // Step 2: Ride posting
     RideSystem rideSys;
