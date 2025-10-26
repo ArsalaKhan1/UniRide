@@ -1,8 +1,5 @@
 #include "Ride.h"
 
-Ride::Ride(string id, string f, string t, string tm, string m)
+Ride::Ride(const std::string &id, const std::string &f, const std::string &t,
+           const std::string &tm, const std::string &m)
     : userID(id), from(f), to(t), time(tm), mode(m) {}
-
-void Ride::displayRide() {
-    cout << "From: " << from << "   To: " << to << "   Time: " << time << "   Mode: " << mode << "   Posted by: " << userID << endl;
-}

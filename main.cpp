@@ -1,88 +1,164 @@
-#include <iostream>
-#include "User.h"
-#include "RideSystem.h"
-#include "Request.h"
-#include "RequestQueue.h"
-#include "OTPverification.h"
-#include "ChatFeature.h"
+#include "crow.h"
 #include "AuthSys.h"
-using namespace std;
+#include "RideSystem.h"
+#include "RequestQueue.h"
+#include "OTPVerification.h"
+#include "ChatFeature.h"
+#include <memory>
 
-int main()
-{
-    srand(time(0)); // for OTP generation randomness
+int main() {
+    crow::SimpleApp app;
 
-    // Step 1: Registration
-    AuthSystem auth;
-    cout << "=== User Registration ===" << endl;
-    User u1 = auth.registerUser("U101", "Ali", "ali@university.edu");
-    User u2 = auth.registerUser("U102", "Sara", "sara@university.edu");
-    auth.displayUsers();
+    AuthSystem authSystem;
+    RideSystem rideSystem;
+    RequestQueue requestQueue(&rideSystem);
 
-    cout << "\n=== Login Phase ===" << endl;
-    string loginEmail;
-    cout << "Enter email to login: ";
-    cin >> loginEmail;
-    if (!auth.loginUser(loginEmail)) {
-        cout << "Exiting system..." << endl;
-        return 0;
-    }
+    // OTP + Chat shared state
+    auto otpSystem = std::make_shared<OTPVerification>("", "");
+    ChatFeature chatFeature(otpSystem);
 
-    cout << "\n=== Login Phase ===" << endl;
-    cout << "Enter email to login: ";
-    cin >> loginEmail;
-    if (!auth.loginUser(loginEmail)) {
-        cout << "Exiting system..." << endl;
-        return 0;
-    }
+    CROW_ROUTE(app, "/")
+    ([]() {
+        return "🚗 UniRide API is running successfully!";
+    });
+    // ✅ USER REGISTRATION
+    CROW_ROUTE(app, "/register").methods("POST"_method)
+    ([&](const crow::request &req) {
+        auto data = crow::json::load(req.body);
+        if (!data) return crow::response(400, "Invalid JSON");
 
-    // Step 2: Ride posting
-    RideSystem rideSys;
-    rideSys.addRide(u1.userID, "Campus", "Downtown", "3 PM", "Car");
-    rideSys.addRide(u2.userID, "Campus", "Airport", "4 PM", "Taxi");
+        auto user = authSystem.registerUser(
+            data["id"].s(),
+            data["name"].s(),
+            data["email"].s()
+        );
+        return crow::response(authSystem.toJson());
+    });
 
-    cout << "\n=== All Available Rides ===" << endl;
-    rideSys.viewRides();
+    // ✅ LOGIN
+    CROW_ROUTE(app, "/login").methods("POST"_method)
+    ([&](const crow::request &req) {
+        auto data = crow::json::load(req.body);
+        if (!data) return crow::response(400, "Invalid JSON");
 
-    // Step 3: Create ride request (Sara looking for Campus → Downtown)
-    RequestQueue reqQ(&rideSys);
-    reqQ.createRequest(u2.userID, "Campus", "Downtown");
+        bool ok = authSystem.loginUser(data["email"].s());
+        crow::json::wvalue res;
+        res["status"] = ok ? "Login successful" : "User not found";
+        return crow::response(res);
+    });
 
-    // Step 4: Process request (Ali accepts or rejects Sara’s request)
-    reqQ.processRequests();
+    // ✅ ADD RIDE
+    CROW_ROUTE(app, "/ride/add").methods("POST"_method)
+    ([&](const crow::request &req) {
+        auto data = crow::json::load(req.body);
+        if (!data) return crow::response(400, "Invalid JSON");
 
-    // Step 5: OTP Verification between Ali and Sara
-    OTPVerification otpSys(u1.userID, u2.userID);
-    otpSys.initiateVerification();
+        rideSystem.addRide(
+            data["userID"].s(),
+            data["from"].s(),
+            data["to"].s(),
+            data["time"].s(),
+            data["mode"].s()
+        );
 
-    cout << "\n=== Ali Verification ===" << endl;
-    otpSys.verifyOTP(u1.userID);
+        return crow::response(rideSystem.getAllRidesJson());
+    });
 
-    cout << "\n=== Sara Verification ===" << endl;
-    otpSys.verifyOTP(u2.userID);
+    // ✅ GET ALL RIDES
+    CROW_ROUTE(app, "/ride/all").methods("GET"_method)
+    ([&]() {
+        return crow::response(rideSystem.getAllRidesJson());
+    });
 
-    // Step 6: Confirm in-person identity
-    otpSys.confirmPartnerIdentity(true, true);
+    // ✅ CREATE REQUEST
+    CROW_ROUTE(app, "/request/create").methods("POST"_method)
+    ([&](const crow::request &req) {
+        auto data = crow::json::load(req.body);
+        if (!data) return crow::response(400, "Invalid JSON");
 
-    if (otpSys.isFullyVerified())
-    {
-        cout << "\n Both users fully verified. Chat unlocked!\n";
-    }
-    else
-    {
-        cout << "\n Verification failed. No chat allowed.\n";
-    }
+        auto ids = requestQueue.createRequest(
+            data["userID"].s(),
+            data["from"].s(),
+            data["to"].s()
+        );
+        crow::json::wvalue res;
+        res["createdIDs"] = ids;
+        return crow::response(res);
+    });
 
-    // Step 7: Chat Feature
-    ChatFeature chat(&otpSys);
+    // ✅ VIEW REQUESTS
+    CROW_ROUTE(app, "/request/pending").methods("GET"_method)
+    ([&]() {
+        return crow::response(requestQueue.listPending());
+    });
 
-    cout << "\n=== Chat Demo ===" << endl;
-    chat.AddMessage(u1.userID, "Hey Sara, let \' s meet near the main gate.");
-    chat.AddMessage(u2.userID, "Sure Ali, see you at 3 PM!");
-    chat.DisplayChat();
+    // ✅ RESPOND TO REQUEST
+    CROW_ROUTE(app, "/request/respond").methods("POST"_method)
+    ([&](const crow::request &req) {
+        auto data = crow::json::load(req.body);
+        if (!data) return crow::response(400, "Invalid JSON");
+        std::string msg;
+        bool success = requestQueue.respondToRequest(data["requestID"].i(), data["accept"].b(), msg);
+        crow::json::wvalue res;
+        res["message"] = msg;
+        res["success"] = success;
+        return crow::response(res);
+    });
 
-    // Optional: limit messages (e.g., keep last 5 only)
-    chat.limitMessages(5);
+    // ✅ OTP INITIATE
+    CROW_ROUTE(app, "/otp/initiate").methods("POST"_method)
+    ([&](const crow::request &req) {
+        auto data = crow::json::load(req.body);
+        if (!data) return crow::response(400, "Invalid JSON");
 
-    return 0;
+        otpSystem = std::make_shared<OTPVerification>(
+            data["userA_ID"].s(),
+            data["userB_ID"].s()
+        );
+        std::string otp = otpSystem->initiateVerification();
+
+        crow::json::wvalue res;
+        res["otp"] = otp;
+        return crow::response(res);
+    });
+
+    // ✅ OTP VERIFY
+    CROW_ROUTE(app, "/otp/verify").methods("POST"_method)
+    ([&](const crow::request &req) {
+        auto data = crow::json::load(req.body);
+        if (!data) return crow::response(400, "Invalid JSON");
+
+        bool ok = otpSystem->verifyOTPInput(data["userID"].s(), data["otp"].s());
+        crow::json::wvalue res;
+        res["status"] = ok ? "Verified" : "Invalid OTP";
+        return crow::response(res);
+    });
+
+    // ✅ OTP STATUS
+    CROW_ROUTE(app, "/otp/status").methods("GET"_method)
+    ([&]() {
+        return crow::response(otpSystem->statusJson());
+    });
+
+    // ✅ CHAT SEND
+    CROW_ROUTE(app, "/chat/send").methods("POST"_method)
+    ([&](const crow::request &req) {
+        auto data = crow::json::load(req.body);
+        if (!data) return crow::response(400, "Invalid JSON");
+
+        std::string err;
+        bool ok = chatFeature.AddMessage(data["sender"].s(), data["text"].s(), err);
+        crow::json::wvalue res;
+        res["success"] = ok;
+        res["error"] = err;
+        return crow::response(res);
+    });
+
+    // ✅ CHAT FETCH
+    CROW_ROUTE(app, "/chat/all").methods("GET"_method)
+    ([&]() {
+        return crow::response(chatFeature.getMessagesJson());
+    });
+
+    app.port(8080).multithreaded().run();
 }

@@ -1,18 +1,23 @@
 #ifndef RIDESYSTEM_H
 #define RIDESYSTEM_H
 
+#pragma once
 #include <vector>
+#include <string>
+#include <mutex>
 #include "Ride.h"
-using namespace std;
+#include "crow.h"
 
 class RideSystem {
 private:
-    vector<Ride> rides;
+    mutable std::mutex mtx;
+    std::vector<Ride> rides;
 
 public:
-    void addRide(string id, string f, string t, string tm, string m);
-    void viewRides();
-    vector<Ride> findMatches(string from, string to);
+    void addRide(const std::string &id, const std::string &from, const std::string &to,
+                 const std::string &time, const std::string &mode);
+    std::vector<Ride> findMatches(const std::string &from, const std::string &to) const;
+    std::vector<Ride> getAllRides() const;
+    crow::json::wvalue getAllRidesJson() const;
 };
-
-#endif
+#endif // RIDESYSTEM_H

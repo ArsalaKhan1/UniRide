@@ -1,23 +1,30 @@
 #ifndef CHATFEATURE_H
 #define CHATFEATURE_H
-
+#pragma once
 #include <deque>
-#include "OTPverification.h"
-#include "Message.h"
-using namespace std;
+#include <mutex>
+#include <string>
+#include "crow.h"
+#include "OTPVerification.h"
 
-class ChatFeature
-{
-private:
-    deque<Message> chat;
-    OTPVerification *otpSystem;
-public:
-    ChatFeature(OTPVerification *otp);
-    string getCurrentTime();
-    void AddMessage(const string &sender, const string &text);
-    void DisplayChat() const;
-    void limitMessages(size_t maxSize);
-
+struct Message {
+    std::string sender;
+    std::string text;
+    std::string timestamp;
 };
 
-#endif
+class ChatFeature {
+private:
+private:
+    std::shared_ptr<OTPVerification> otpSystem;
+    std::deque<Message> chat;
+    mutable std::mutex mtx;
+    std::string getCurrentTime() const;
+
+public:
+    ChatFeature(std::shared_ptr<OTPVerification> otp);
+    bool AddMessage(const std::string &sender, const std::string &text, std::string &outErr);
+    crow::json::wvalue getMessagesJson() const;
+    void limitMessages(size_t maxSize);
+};
+#endif // CHATFEATURE_H

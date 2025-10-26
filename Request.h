@@ -2,14 +2,15 @@
 #define REQUEST_H
 
 #include <string>
-using namespace std;
 
-class Request {
-public:
-    string userID, receiverID; 
-    int rideIndex; 
+struct Request {
+    int requestID;           // Unique request identifier
+    std::string userID;      // ID of the user sending the request
+    std::string receiverID;  // ID of the user receiving the request
+    int rideIndex;           // Index of the ride being requested
 
-    Request(string u, string r, int idx);
+    Request() = default;
+    Request(int reqID, const std::string &u, const std::string &r, int idx);
 };
 
-#endif
+#endif // REQUEST_H

@@ -2,14 +2,14 @@
 #define USER_H
 
 #include <string>
-using namespace std;
 
-class User {
-public:
-    string userID, name, email;
+struct User {
+    std::string userID;
+    std::string name;
+    std::string email;
 
     User();
-    User(string id, string n, string e);
+    User(const std::string &id, const std::string &n, const std::string &e);
 };
 
-#endif
+#endif // USER_H

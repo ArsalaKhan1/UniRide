@@ -1,96 +1,51 @@
 #include "RequestQueue.h"
-#include <iostream>
+#include <algorithm>
 
 RequestQueue::RequestQueue(RideSystem *rs) : rideSystem(rs) {}
 
-// Enqueue all matching rides
-void RequestQueue::createRequest(string userID, string from, string to)
-{
-    vector<Ride> matches = rideSystem->findMatches(from, to);
-    if (!matches.empty())
-    {
-        for (int i = 0; i < matches.size(); i++)
-        {
-            Ride matchedRide = matches[i];
-            enqueueRequest(userID, matchedRide.userID, i);
-        }
+std::vector<int> RequestQueue::createRequest(const std::string &userID, const std::string &from, const std::string &to) {
+    std::vector<int> createdIDs;
+    auto matches = rideSystem->findMatches(from, to);
+    std::lock_guard<std::mutex> lock(mtx);
+    for (size_t i = 0; i < matches.size(); ++i) {
+        int reqID = nextRequestID++;
+        Request r(reqID, userID, matches[i].userID, static_cast<int>(i));
+        queue.push_back(r);
+        createdIDs.push_back(reqID);
     }
-    else
-    {
-        cout << "No matching rides found for " << userID << " from "
-             << from << " to " << to << ".\n";
-    }
+    return createdIDs;
 }
 
-void RequestQueue::enqueueRequest(string userID, string receiverID, int rideIdx)
-{
-    Request newReq(userID, receiverID, rideIdx);
-    reqQueue.push(newReq);
-    cout << "Request from " << userID << " -> " << receiverID
-         << " for ride " << rideIdx << " added to queue.\n";
+crow::json::wvalue RequestQueue::listPending() const {
+    crow::json::wvalue res;
+    std::lock_guard<std::mutex> lock(mtx);
+    int i = 0;
+    for (const auto &r : queue) {
+        res["requests"][i]["requestID"] = r.requestID;
+        res["requests"][i]["userID"] = r.userID;
+        res["requests"][i]["receiverID"] = r.receiverID;
+        res["requests"][i]["rideIndex"] = r.rideIndex;
+        ++i;
+    }
+    return res;
 }
 
-//  choose which request to accept/reject
-void RequestQueue::processRequests()
-{
-    while (!reqQueue.empty())
-    {
-        Request current = reqQueue.front(); // get the first request
-
-        cout << "\n--- New Ride Request ---\n";
-        cout << "From: " << current.userID
-             << " -> To: " << current.receiverID
-             << " (Ride Index: " << current.rideIndex << ")\n";
-        cout << "-------------------------\n";
-
-        char decision;
-        cout << "Accept (A) or Reject (R)? ";
-        cin >> decision;
-
-        if (decision == 'A' || decision == 'a')
-        {
-            cout << "Request accepted: " << current.userID
-                 << " is now connected with " << current.receiverID << "!\n";
-
-            // After acceptance, we can stop (return) or keep going
-            // If you want to return immediately after an acceptance:
-            return;
-        }
-        else
-        {
-            cout << "Request rejected: " << current.userID
-                 << " → " << current.receiverID << endl;
-        }
-
-        // remove the processed request
-        reqQueue.pop();
+bool RequestQueue::respondToRequest(int requestID, bool accept, std::string &outMessage) {
+    std::lock_guard<std::mutex> lock(mtx);
+    auto it = std::find_if(queue.begin(), queue.end(), [&](const Request &r) {
+        return r.requestID == requestID;
+    });
+    if (it == queue.end()) {
+        outMessage = "Request not found";
+        return false;
     }
-
-    cout << "\nAll pending requests have been processed!\n";
-}
-
-void RequestQueue::displayRequests()
-{
-    if (reqQueue.empty())
-    {
-        cout << "No pending requests.\n";
-        return;
+    if (accept) {
+        outMessage = "Request " + std::to_string(requestID) + " accepted: " + it->userID + " connected with " + it->receiverID;
+        queue.erase(it);
+        return true;
+    } else {
+        outMessage = "Request " + std::to_string(requestID) + " rejected";
+        queue.erase(it);
+        return false;
     }
-
-    cout << "\n--- Pending Requests ---\n";
-    queue<Request> temp = reqQueue;
-    while (!temp.empty())
-    {
-        Request r = temp.front();
-        cout << "From: " << r.userID
-             << " → To: " << r.receiverID
-             << " (Ride Index: " << r.rideIndex << ")\n";
-        temp.pop();
-    }
-    cout << "-------------------------\n";
-}
-
-bool RequestQueue::isEmpty()
-{
-    return reqQueue.empty();
 }

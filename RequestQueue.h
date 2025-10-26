@@ -1,24 +1,24 @@
-#ifndef REQUEUEQUEUE_H
+#ifndef REQUESTQUEUE_H
 #define REQUESTQUEUE_H
 
-#include <queue>
+#pragma once
+#include <vector>
+#include <mutex>
 #include "Request.h"
 #include "RideSystem.h"
-using namespace std;
+#include "crow.h"
 
-class RequestQueue
-{
+class RequestQueue {
 private:
-    queue<Request> reqQueue;
-    RideSystem *rideSystem; 
+    mutable std::mutex mtx;
+    std::vector<Request> queue;
+    int nextRequestID = 1;
+    RideSystem *rideSystem;
 
 public:
     RequestQueue(RideSystem *rs);
-    void createRequest(string userID, string from, string to);
-    void enqueueRequest(string userID, string receiverID, int rideIdx);
-    void processRequests();
-    void displayRequests();
-    bool isEmpty();
+    std::vector<int> createRequest(const std::string &userID, const std::string &from, const std::string &to);
+    crow::json::wvalue listPending() const;
+    bool respondToRequest(int requestID, bool accept, std::string &outMessage);
 };
-
-#endif
+#endif // REQUESTQUEUE_H

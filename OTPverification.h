@@ -1,28 +1,42 @@
 #ifndef OTPVERIFICATION_H
 #define OTPVERIFICATION_H
 
-#include <queue>
+#pragma once
 #include <string>
-using namespace std;
+#include <mutex>
+#include "crow.h"
 
 class OTPVerification {
 private:
-    string userA_ID, userB_ID, otp_code;
-    bool userA_verified, userB_verified, partnerIdentityVerified;
-    queue<char> generatedOTP;
-    queue<char> inputQueue;
+    std::string userA_ID;
+    std::string userB_ID;
+    std::string otp_code;
+    bool userA_verified;
+    bool userB_verified;
+    bool partnerIdentityVerified;
+    mutable std::mutex mtx;
 
-    string generateOTP(int length);
+    std::string generateOTP(int length);
 
 public:
-    OTPVerification(string user_A, string user_B);
-    void initiateVerification();
-    void takeUserInput(const string &input);
-    void verifyOTP(const string &userID);
-    bool unlockChat();
+    // ✅ Constructor
+    OTPVerification(const std::string &userA, const std::string &userB);
+
+    // ✅ Make non-copyable (fixes your error)
+    OTPVerification(const OTPVerification&) = delete;
+    OTPVerification& operator=(const OTPVerification&) = delete;
+
+    // ✅ Allow move semantics (useful for std::unique_ptr or containers)
+    OTPVerification(OTPVerification&&) = default;
+    OTPVerification& operator=(OTPVerification&&) = default;
+
+    // ✅ Core methods
+    std::string initiateVerification();
+    bool verifyOTPInput(const std::string &userID, const std::string &input);
     void confirmPartnerIdentity(bool userA_option, bool userB_option);
-    bool isFullyVerified();
-   
+    bool unlockChat() const;
+    bool isFullyVerified() const;
+    crow::json::wvalue statusJson() const;
 };
 
-#endif
+#endif // OTPVERIFICATION_H

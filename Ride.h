@@ -2,15 +2,17 @@
 #define RIDE_H
 
 #include <string>
-#include <iostream>
-using namespace std;
 
-class Ride {
-public:
-    string userID, from, to, time, mode;
+struct Ride {
+    std::string userID;  // ID of the user offering or taking the ride
+    std::string from;    // Starting point
+    std::string to;      // Destination
+    std::string time;    // Time of the ride
+    std::string mode;    // Mode of transport (car, bike, etc.)
 
-    Ride(string id, string f, string t, string tm, string m);
-    void displayRide();
+    Ride() = default;
+    Ride(const std::string &id, const std::string &f, const std::string &t,
+         const std::string &tm, const std::string &m);
 };
 
-#endif
+#endif // RIDE_H

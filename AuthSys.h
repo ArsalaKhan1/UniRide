@@ -1,21 +1,22 @@
 #ifndef AUTHSYS_H
 #define AUTHSYS_H
 
+#pragma once
 #include <string>
-#include <iostream>
 #include <unordered_map>
+#include <mutex>
 #include "User.h"
-using namespace std;
+#include "crow.h"
 
 class AuthSystem {
 private:
-    unordered_map<string, User> users; // key: email
+    mutable std::mutex mtx;
+    std::unordered_map<std::string, User> users; // key: email
 
 public:
-    User registerUser(string id, string name, string email);
-    bool loginUser(string email);
-    bool isRegistered(string email);
-    void displayUsers();
+    User registerUser(const std::string &id, const std::string &name, const std::string &email);
+    bool loginUser(const std::string &email);
+    bool isRegistered(const std::string &email) const;
+    crow::json::wvalue toJson() const;
 };
-
-#endif
+#endif // AUTHSYS_H

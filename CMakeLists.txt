@@ -1,17 +1,31 @@
-cmake_minimum_required(VERSION 3.10)
-project(RideShare)
+cmake_minimum_required(VERSION 3.16)
+project(UniRide)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include_directories(include)
+# === Crow setup ===
+set(ASIO_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/crow/deps/asio/asio/include")
+set(FMT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/crow/deps/fmt/include")
 
-add_executable(RideShare
-    main.cpp
-    User.cpp
-    Ride.cpp
-    RideSystem.cpp
-    Request.cpp
-    RequestQueue.cpp
-    OTPverification.cpp
-    ChatFeature.cpp
+# === Automatically include all .cpp files in the UniRide folder ===
+file(GLOB SOURCES
+    "${PROJECT_SOURCE_DIR}/*.cpp"
 )
+
+# === Create your executable ===
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+# === Include directories ===
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/crow/include
+    ${ASIO_INCLUDE_DIR}
+    ${FMT_INCLUDE_DIR}
+)
+
+# === Windows-specific libraries ===
+if (WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ws2_32 mswsock)
+endif()
+
