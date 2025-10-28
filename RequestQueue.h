@@ -2,7 +2,7 @@
 #define REQUESTQUEUE_H
 
 #pragma once
-#include <vector>
+#include <queue>
 #include <mutex>
 #include "Request.h"
 #include "RideSystem.h"
@@ -12,7 +12,7 @@
 class RequestQueue {
 private:
     mutable std::mutex mtx;
-    std::vector<Request> queue;
+    std::queue<Request> queue;
     int nextRequestID = 1;
     RideSystem *rideSystem;
     DatabaseManager *dbManager;
