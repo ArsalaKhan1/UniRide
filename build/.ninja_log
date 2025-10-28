@@ -1,0 +1,18 @@
+# ninja log v6
+26875	27567	7832068262849014	UniRide.exe	f1fbc3c9defe2a33
+51	26875	7832067994608691	CMakeFiles/UniRide.dir/main.cpp.obj	2a59ab791cf6c55b
+11	13596	7832067994209108	CMakeFiles/UniRide.dir/ChatFeature.cpp.obj	8deb194699e4e6b9
+37	13276	7832067994486059	CMakeFiles/UniRide.dir/RideSystem.cpp.obj	42e27309652153b1
+27	13234	7832067994357216	CMakeFiles/UniRide.dir/RequestQueue.cpp.obj	8ab2cda08f383241
+6	13408	7832067994156751	CMakeFiles/UniRide.dir/AuthSys.cpp.obj	82a0709009dbdfa8
+16	12282	7832067994247582	CMakeFiles/UniRide.dir/OTPverification.cpp.obj	47169f793d9c656f
+46	818	7832067994545200	CMakeFiles/UniRide.dir/User.cpp.obj	72d1908ed404a2e4
+32	777	7832067994415061	CMakeFiles/UniRide.dir/Ride.cpp.obj	96caa314b48a8d14
+21	728	7832067994307880	CMakeFiles/UniRide.dir/Request.cpp.obj	33ec1de328dbb574
+35	470	7832082849250904	build.ninja	39b662797bdf47c9
+30	717	7832082850113179	CMakeFiles/UniRide.dir/DatabaseManager.cpp.obj	3f6bbc3816d5be84
+34	16423	7832082850152643	CMakeFiles/UniRide.dir/main.cpp.obj	2a59ab791cf6c55b
+16423	16982	7832083014046156	UniRide.exe	b28e1156da052e3d
+59	1269	7833674705160023	CMakeFiles/UniRide.dir/DatabaseManager.cpp.obj	3f6bbc3816d5be84
+66	20694	7833674705229962	CMakeFiles/UniRide.dir/main.cpp.obj	2a59ab791cf6c55b
+20695	21487	7833674911500897	UniRide.exe	b28e1156da052e3d

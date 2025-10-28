@@ -24,8 +24,17 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${FMT_INCLUDE_DIR}
 )
 
+
+# === Find SQLite3 ===
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SQLITE3 REQUIRED sqlite3)
+
+# === Link libraries ===
+target_link_libraries(${PROJECT_NAME} PRIVATE ${SQLITE3_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SQLITE3_INCLUDE_DIRS})
+
 # === Windows-specific libraries ===
 if (WIN32)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ws2_32 mswsock)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ws2_32 mswsock ssl crypto)
 endif()
 

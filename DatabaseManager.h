@@ -1,0 +1,44 @@
+#ifndef DATABASEMANAGER_H
+#define DATABASEMANAGER_H
+
+#include <sqlite3.h>
+#include <string>
+#include <vector>
+#include "User.h"
+#include "Ride.h"
+
+class DatabaseManager {
+private:
+    sqlite3* db;
+    std::string dbPath;
+
+public:
+    DatabaseManager(const std::string& path = "rideshare.db");
+    ~DatabaseManager();
+    
+    bool initialize();
+    
+    // User operations
+    bool insertUser(const User& user);
+    User getUserByEmail(const std::string& email);
+    std::vector<User> getAllUsers();
+    
+    // Ride operations
+    bool insertRide(const Ride& ride);
+    std::vector<Ride> getAllRides();
+    std::vector<Ride> findRideMatches(const std::string& from, const std::string& to);
+    
+    // Request operations
+    bool insertRequest(const std::string& userID, const std::string& from, const std::string& to);
+    bool updateRequestStatus(int requestID, const std::string& status);
+    
+    // OTP operations
+    bool insertOTPSession(const std::string& userA, const std::string& userB, const std::string& otp);
+    bool updateOTPStatus(const std::string& userA, const std::string& userB, const std::string& status);
+    
+    // Message operations
+    bool insertMessage(const std::string& senderID, const std::string& messageText);
+    std::vector<std::pair<std::string, std::string>> getAllMessages(); // returns (sender, message) pairs
+};
+
+#endif // DATABASEMANAGER_H
