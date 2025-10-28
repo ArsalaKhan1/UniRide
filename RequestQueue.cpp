@@ -1,12 +1,23 @@
 #include "RequestQueue.h"
 #include <algorithm>
 
-RequestQueue::RequestQueue(RideSystem *rs) : rideSystem(rs) {}
+RequestQueue::RequestQueue(RideSystem *rs, DatabaseManager *db) : rideSystem(rs), dbManager(db) {}
 
 std::vector<int> RequestQueue::createRequest(const std::string &userID, const std::string &from, const std::string &to) {
     std::vector<int> createdIDs;
     auto matches = rideSystem->findMatches(from, to);
+    
     std::lock_guard<std::mutex> lock(mtx);
+    
+    if (matches.empty()) {
+        rideSystem->addRide(userID, from, to, "flexible", "any");
+        
+        Ride newRide(userID, from, to, "flexible", "any");
+        dbManager->insertRide(newRide);
+        
+        return createdIDs; 
+    }
+    
     for (size_t i = 0; i < matches.size(); ++i) {
         int reqID = nextRequestID++;
         Request r(reqID, userID, matches[i].userID, static_cast<int>(i));

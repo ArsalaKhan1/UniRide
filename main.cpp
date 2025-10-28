@@ -20,11 +20,11 @@ int main() {
 
     AuthSystem authSystem;
     RideSystem rideSystem;
-    RequestQueue requestQueue(&rideSystem);
+    RequestQueue requestQueue(&rideSystem, &dbManager);
 
     // OTP + Chat shared state
     auto otpSystem = std::make_shared<OTPVerification>("", "");
-    ChatFeature chatFeature(otpSystem);
+    auto chatFeature = std::make_unique<ChatFeature>(otpSystem);
 
     CROW_ROUTE(app, "/")
     ([]() {
@@ -69,36 +69,7 @@ int main() {
         return crow::response(res);
     });
 
-    // ✅ ADD RIDE
-    CROW_ROUTE(app, "/ride/add").methods("POST"_method)
-    ([&](const crow::request &req) {
-        auto data = crow::json::load(req.body);
-        if (!data) return crow::response(400, "Invalid JSON");
 
-        Ride ride(
-            data["userID"].s(),
-            data["from"].s(),
-            data["to"].s(),
-            data["time"].s(),
-            data["mode"].s()
-        );
-        
-        // Save to database
-        if (!dbManager.insertRide(ride)) {
-            return crow::response(500, "Failed to save ride to database");
-        }
-        
-        // Also add to in-memory system for compatibility
-        rideSystem.addRide(
-            data["userID"].s(),
-            data["from"].s(),
-            data["to"].s(),
-            data["time"].s(),
-            data["mode"].s()
-        );
-
-        return crow::response(rideSystem.getAllRidesJson());
-    });
 
     // ✅ GET ALL RIDES
     CROW_ROUTE(app, "/ride/all").methods("GET"_method)
@@ -186,6 +157,7 @@ int main() {
             data["userA_ID"].s(),
             data["userB_ID"].s()
         );
+        chatFeature = std::make_unique<ChatFeature>(otpSystem);  // Update chat with new OTP system
         std::string otp = otpSystem->initiateVerification();
         
         // Save OTP session to database
@@ -235,7 +207,7 @@ int main() {
         }
 
         std::string err;
-        bool ok = chatFeature.AddMessage(data["sender"].s(), data["text"].s(), err);
+        bool ok = chatFeature->AddMessage(data["sender"].s(), data["text"].s(), err);
         crow::json::wvalue res;
         res["success"] = ok;
         res["error"] = err;

@@ -6,6 +6,7 @@
 #include <mutex>
 #include "Request.h"
 #include "RideSystem.h"
+#include "DatabaseManager.h"
 #include "crow.h"
 
 class RequestQueue {
@@ -14,9 +15,10 @@ private:
     std::vector<Request> queue;
     int nextRequestID = 1;
     RideSystem *rideSystem;
+    DatabaseManager *dbManager;
 
 public:
-    RequestQueue(RideSystem *rs);
+    RequestQueue(RideSystem *rs, DatabaseManager *db);
     std::vector<int> createRequest(const std::string &userID, const std::string &from, const std::string &to);
     crow::json::wvalue listPending() const;
     bool respondToRequest(int requestID, bool accept, std::string &outMessage);
