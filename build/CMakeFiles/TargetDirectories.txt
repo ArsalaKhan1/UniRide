@@ -1,3 +1,0 @@
-C:/Users/Admin/projects/rideShare/build/CMakeFiles/UniRide.dir
-C:/Users/Admin/projects/rideShare/build/CMakeFiles/edit_cache.dir
-C:/Users/Admin/projects/rideShare/build/CMakeFiles/rebuild_cache.dir

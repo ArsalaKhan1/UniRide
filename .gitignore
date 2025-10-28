@@ -1,0 +1,13 @@
+build/
+CMakeFiles/
+CMakeCache.txt
+build.ninja
+.ninja_deps
+.ninja_log
+cmake_install.cmake
+*.exe
+*.out
+main
+*.db
+*.db-wal
+*.db-shm
