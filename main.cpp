@@ -28,9 +28,9 @@ int main() {
 
     CROW_ROUTE(app, "/")
     ([]() {
-        return "🚗 UniRide API is running successfully!";
+        return "UniRide API is running successfully!";
     });
-    // ✅ USER REGISTRATION
+    // USER REGISTRATION
     CROW_ROUTE(app, "/register").methods("POST"_method)
     ([&](const crow::request &req) {
         auto data = crow::json::load(req.body);
@@ -50,7 +50,7 @@ int main() {
         return crow::response(authSystem.toJson());
     });
 
-    // ✅ LOGIN
+    // LOGIN
     CROW_ROUTE(app, "/login").methods("POST"_method)
     ([&](const crow::request &req) {
         auto data = crow::json::load(req.body);
@@ -71,7 +71,7 @@ int main() {
 
 
 
-    // ✅ GET ALL RIDES
+    // GET ALL RIDES
     CROW_ROUTE(app, "/ride/all").methods("GET"_method)
     ([&]() {
         auto rides = dbManager.getAllRides();
@@ -89,7 +89,7 @@ int main() {
         return crow::response(res);
     });
 
-    // ✅ CREATE REQUEST
+    // CREATE REQUEST
     CROW_ROUTE(app, "/request/create").methods("POST"_method)
     ([&](const crow::request &req) {
         auto data = crow::json::load(req.body);
@@ -124,13 +124,13 @@ int main() {
         return crow::response(res);
     });
 
-    // ✅ VIEW REQUESTS
+    // VIEW REQUESTS
     CROW_ROUTE(app, "/request/pending").methods("GET"_method)
     ([&]() {
         return crow::response(requestQueue.listPending());
     });
 
-    // ✅ RESPOND TO REQUEST
+    // RESPOND TO REQUEST
     CROW_ROUTE(app, "/request/respond").methods("POST"_method)
     ([&](const crow::request &req) {
         auto data = crow::json::load(req.body);
@@ -147,7 +147,7 @@ int main() {
         return crow::response(res);
     });
 
-    // ✅ OTP INITIATE
+    // OTP INITIATE
     CROW_ROUTE(app, "/otp/initiate").methods("POST"_method)
     ([&](const crow::request &req) {
         auto data = crow::json::load(req.body);
@@ -170,7 +170,7 @@ int main() {
         return crow::response(res);
     });
 
-    // ✅ OTP VERIFY
+    // OTP VERIFY
     CROW_ROUTE(app, "/otp/verify").methods("POST"_method)
     ([&](const crow::request &req) {
         auto data = crow::json::load(req.body);
@@ -189,13 +189,13 @@ int main() {
         return crow::response(res);
     });
 
-    // ✅ OTP STATUS
+    // OTP STATUS
     CROW_ROUTE(app, "/otp/status").methods("GET"_method)
     ([&]() {
         return crow::response(otpSystem->statusJson());
     });
 
-    // ✅ CHAT SEND
+    // CHAT SEND
     CROW_ROUTE(app, "/chat/send").methods("POST"_method)
     ([&](const crow::request &req) {
         auto data = crow::json::load(req.body);
@@ -214,7 +214,7 @@ int main() {
         return crow::response(res);
     });
 
-    // ✅ CHAT FETCH
+    // CHAT FETCH
     CROW_ROUTE(app, "/chat/all").methods("GET"_method)
     ([&]() {
         auto messages = dbManager.getAllMessages();
