@@ -8,6 +8,24 @@
 #include <memory>
 #include <iostream>
 
+// Helper function to convert string to RideType
+RideType stringToRideType(const std::string& typeStr) {
+    if (typeStr == "bike") return RideType::BIKE;
+    if (typeStr == "carpool") return RideType::CARPOOL;
+    if (typeStr == "rickshaw") return RideType::RICKSHAW;
+    return RideType::CARPOOL; // default
+}
+
+// Helper function to convert RideType to string
+std::string rideTypeToString(RideType type) {
+    switch (type) {
+        case RideType::BIKE: return "bike";
+        case RideType::CARPOOL: return "carpool";
+        case RideType::RICKSHAW: return "rickshaw";
+        default: return "carpool";
+    }
+}
+
 int main() {
     crow::SimpleApp app;
 
@@ -20,6 +38,7 @@ int main() {
 
     AuthSystem authSystem;
     RideSystem rideSystem;
+    rideSystem.setDatabaseManager(&dbManager);
     RequestQueue requestQueue(&rideSystem, &dbManager);
 
     // OTP + Chat shared state
@@ -39,7 +58,8 @@ int main() {
         auto user = authSystem.registerUser(
             data["id"].s(),
             data["name"].s(),
-            data["email"].s()
+            data["email"].s(),
+            data["gender"].s()
         );
         
         // Save to database
@@ -84,33 +104,73 @@ int main() {
             res["rides"][i]["to"] = rides[i].to;
             res["rides"][i]["time"] = rides[i].time;
             res["rides"][i]["mode"] = rides[i].mode;
+            res["rides"][i]["rideType"] = rideTypeToString(rides[i].rideType);
+            res["rides"][i]["currentCapacity"] = rides[i].currentCapacity;
+            res["rides"][i]["maxCapacity"] = rides[i].maxCapacity;
+            res["rides"][i]["availableSlots"] = rides[i].getAvailableSlots();
+            res["rides"][i]["femalesOnly"] = rides[i].femalesOnly;
         }
+        
         
         return crow::response(res);
     });
 
-    // CREATE REQUEST
+    // CREATE RIDE OFFER (for owners)
+    CROW_ROUTE(app, "/ride/offer").methods("POST"_method)
+    ([&](const crow::request &req) {
+        auto data = crow::json::load(req.body);
+        if (!data) return crow::response(400, "Invalid JSON");
+
+        RideType rideType = stringToRideType(data["rideType"].s());
+        bool femalesOnly = data.has("femalesOnly") ? data["femalesOnly"].b() : false;
+        
+        // Validate ride type for owners
+        if (rideType == RideType::RICKSHAW) {
+            return crow::response(400, "Rickshaw rides cannot have owners");
+        }
+        
+        auto ids = requestQueue.createRideOffer(
+            data["userID"].s(),
+            data["from"].s(),
+            data["to"].s(),
+            rideType,
+            femalesOnly
+        );
+        
+        crow::json::wvalue res;
+        res["message"] = "Ride offer created successfully";
+        res["rideType"] = rideTypeToString(rideType);
+        res["maxCapacity"] = (rideType == RideType::BIKE) ? 2 : 5;
+        
+        return crow::response(res);
+    });
+
+    // CREATE REQUEST (for passengers/participants)
     CROW_ROUTE(app, "/request/create").methods("POST"_method)
     ([&](const crow::request &req) {
         auto data = crow::json::load(req.body);
         if (!data) return crow::response(400, "Invalid JSON");
 
+        RideType rideType = stringToRideType(data["rideType"].s());
+        
         // Save request to database
-        if (!dbManager.insertRequest(data["userID"].s(), data["from"].s(), data["to"].s())) {
+        if (!dbManager.insertRequest(data["userID"].s(), data["from"].s(), data["to"].s(), rideType)) {
             return crow::response(500, "Failed to save request to database");
         }
 
         // Find matches from database
-        auto matches = dbManager.findRideMatches(data["from"].s(), data["to"].s());
+        auto matches = dbManager.findRideMatches(data["from"].s(), data["to"].s(), rideType, data["userID"].s());
         
         auto ids = requestQueue.createRequest(
             data["userID"].s(),
             data["from"].s(),
-            data["to"].s()
+            data["to"].s(),
+            rideType
         );
         
         crow::json::wvalue res;
         res["createdIDs"] = ids;
+        res["rideType"] = rideTypeToString(rideType);
         res["matches"] = crow::json::wvalue::list();
         
         for (size_t i = 0; i < matches.size(); ++i) {
@@ -119,6 +179,8 @@ int main() {
             res["matches"][i]["to"] = matches[i].to;
             res["matches"][i]["time"] = matches[i].time;
             res["matches"][i]["mode"] = matches[i].mode;
+            res["matches"][i]["rideType"] = rideTypeToString(matches[i].rideType);
+            res["matches"][i]["availableSlots"] = matches[i].getAvailableSlots();
         }
         
         return crow::response(res);
@@ -128,6 +190,33 @@ int main() {
     CROW_ROUTE(app, "/request/pending").methods("GET"_method)
     ([&]() {
         return crow::response(requestQueue.listPending());
+    });
+
+    // JOIN RIDE
+    CROW_ROUTE(app, "/ride/join").methods("POST"_method)
+    ([&](const crow::request &req) {
+        auto data = crow::json::load(req.body);
+        if (!data) return crow::response(400, "Invalid JSON");
+
+        RideType rideType = stringToRideType(data["rideType"].s());
+        
+        bool success = rideSystem.joinRide(
+            data["userID"].s(),
+            data["from"].s(),
+            data["to"].s(),
+            rideType
+        );
+        
+        crow::json::wvalue res;
+        if (success) {
+            res["message"] = "Successfully joined ride";
+            res["status"] = "success";
+        } else {
+            res["message"] = "No available rides found or ride is full";
+            res["status"] = "failed";
+        }
+        
+        return crow::response(res);
     });
 
     // RESPOND TO REQUEST

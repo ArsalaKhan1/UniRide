@@ -1,12 +1,12 @@
 #include "AuthSys.h"
 
-User AuthSystem::registerUser(const std::string &id, const std::string &name, const std::string &email) {
+User AuthSystem::registerUser(const std::string &id, const std::string &name, const std::string &email, const std::string &gender) {
     std::lock_guard<std::mutex> lock(mtx);
     auto it = users.find(email);
     if (it != users.end()) {
         return it->second;
     }
-    users[email] = User(id, name, email);
+    users[email] = User(id, name, email, gender);
     return users[email];
 }
 

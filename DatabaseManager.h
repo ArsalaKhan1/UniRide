@@ -21,15 +21,17 @@ public:
     // User operations
     bool insertUser(const User& user);
     User getUserByEmail(const std::string& email);
+    User getUserByID(const std::string& userID);
     std::vector<User> getAllUsers();
     
     // Ride operations
     bool insertRide(const Ride& ride);
     std::vector<Ride> getAllRides();
-    std::vector<Ride> findRideMatches(const std::string& from, const std::string& to);
+    std::vector<Ride> findRideMatches(const std::string& from, const std::string& to, RideType rideType, const std::string& userID = "");
+    bool updateRideCapacity(const std::string& userID, const std::string& from, const std::string& to, int newCapacity);
     
     // Request operations
-    bool insertRequest(const std::string& userID, const std::string& from, const std::string& to);
+    bool insertRequest(const std::string& userID, const std::string& from, const std::string& to, RideType rideType);
     bool updateRequestStatus(int requestID, const std::string& status);
     
     // OTP operations

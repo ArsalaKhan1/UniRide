@@ -21,7 +21,8 @@ bool DatabaseManager::initialize() {
         CREATE TABLE IF NOT EXISTS users (
             userID TEXT PRIMARY KEY,
             name TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL
+            email TEXT UNIQUE NOT NULL,
+            gender TEXT
         );
     )";
 
@@ -34,6 +35,10 @@ bool DatabaseManager::initialize() {
             to_location TEXT NOT NULL,
             time TEXT NOT NULL,
             mode TEXT NOT NULL,
+            ride_type INTEGER NOT NULL DEFAULT 1,
+            current_capacity INTEGER NOT NULL DEFAULT 1,
+            max_capacity INTEGER NOT NULL DEFAULT 5,
+            females_only INTEGER DEFAULT 0,
             FOREIGN KEY(userID) REFERENCES users(userID)
         );
     )";
@@ -45,6 +50,7 @@ bool DatabaseManager::initialize() {
             userID TEXT NOT NULL,
             from_location TEXT NOT NULL,
             to_location TEXT NOT NULL,
+            ride_type INTEGER NOT NULL,
             status TEXT DEFAULT 'pending',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(userID) REFERENCES users(userID)
@@ -92,7 +98,7 @@ bool DatabaseManager::initialize() {
 }
 
 bool DatabaseManager::insertUser(const User& user) {
-    const char* sql = "INSERT OR REPLACE INTO users (userID, name, email) VALUES (?, ?, ?);";
+    const char* sql = "INSERT OR REPLACE INTO users (userID, name, email, gender) VALUES (?, ?, ?, ?);";
     sqlite3_stmt* stmt;
     
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -101,6 +107,7 @@ bool DatabaseManager::insertUser(const User& user) {
     sqlite3_bind_text(stmt, 1, user.userID.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, user.name.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 3, user.email.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 4, user.gender.c_str(), -1, SQLITE_STATIC);
 
     rc = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
@@ -109,7 +116,7 @@ bool DatabaseManager::insertUser(const User& user) {
 }
 
 User DatabaseManager::getUserByEmail(const std::string& email) {
-    const char* sql = "SELECT userID, name, email FROM users WHERE email = ?;";
+    const char* sql = "SELECT userID, name, email, gender FROM users WHERE email = ?;";
     sqlite3_stmt* stmt;
     User user;
 
@@ -122,6 +129,28 @@ User DatabaseManager::getUserByEmail(const std::string& email) {
         user.userID = (char*)sqlite3_column_text(stmt, 0);
         user.name = (char*)sqlite3_column_text(stmt, 1);
         user.email = (char*)sqlite3_column_text(stmt, 2);
+        user.gender = (char*)sqlite3_column_text(stmt, 3);
+    }
+
+    sqlite3_finalize(stmt);
+    return user;
+}
+
+User DatabaseManager::getUserByID(const std::string& userID) {
+    const char* sql = "SELECT userID, name, email, gender FROM users WHERE userID = ?;";
+    sqlite3_stmt* stmt;
+    User user;
+
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) return user;
+
+    sqlite3_bind_text(stmt, 1, userID.c_str(), -1, SQLITE_STATIC);
+
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        user.userID = (char*)sqlite3_column_text(stmt, 0);
+        user.name = (char*)sqlite3_column_text(stmt, 1);
+        user.email = (char*)sqlite3_column_text(stmt, 2);
+        user.gender = (char*)sqlite3_column_text(stmt, 3);
     }
 
     sqlite3_finalize(stmt);
@@ -149,7 +178,7 @@ std::vector<User> DatabaseManager::getAllUsers() {
 }
 
 bool DatabaseManager::insertRide(const Ride& ride) {
-    const char* sql = "INSERT INTO rides (userID, from_location, to_location, time, mode) VALUES (?, ?, ?, ?, ?);";
+    const char* sql = "INSERT INTO rides (userID, from_location, to_location, time, mode, ride_type, current_capacity, max_capacity, females_only) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
     sqlite3_stmt* stmt;
     
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -160,6 +189,10 @@ bool DatabaseManager::insertRide(const Ride& ride) {
     sqlite3_bind_text(stmt, 3, ride.to.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 4, ride.time.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 5, ride.mode.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 6, static_cast<int>(ride.rideType));
+    sqlite3_bind_int(stmt, 7, ride.currentCapacity);
+    sqlite3_bind_int(stmt, 8, ride.maxCapacity);
+    sqlite3_bind_int(stmt, 9, ride.femalesOnly ? 1 : 0);
 
     rc = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
@@ -169,7 +202,7 @@ bool DatabaseManager::insertRide(const Ride& ride) {
 
 std::vector<Ride> DatabaseManager::getAllRides() {
     std::vector<Ride> rides;
-    const char* sql = "SELECT userID, from_location, to_location, time, mode FROM rides;";
+    const char* sql = "SELECT userID, from_location, to_location, time, mode, ride_type, current_capacity, max_capacity, females_only FROM rides;";
     sqlite3_stmt* stmt;
 
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -182,6 +215,13 @@ std::vector<Ride> DatabaseManager::getAllRides() {
         ride.to = (char*)sqlite3_column_text(stmt, 2);
         ride.time = (char*)sqlite3_column_text(stmt, 3);
         ride.mode = (char*)sqlite3_column_text(stmt, 4);
+        ride.rideType = static_cast<RideType>(sqlite3_column_int(stmt, 5));
+        ride.currentCapacity = sqlite3_column_int(stmt, 6);
+        ride.maxCapacity = sqlite3_column_int(stmt, 7);
+        ride.femalesOnly = sqlite3_column_int(stmt, 8) == 1;
+        if (!ride.userID.empty()) {
+            ride.participants.push_back(ride.userID);
+        }
         rides.push_back(ride);
     }
 
@@ -189,9 +229,9 @@ std::vector<Ride> DatabaseManager::getAllRides() {
     return rides;
 }
 
-std::vector<Ride> DatabaseManager::findRideMatches(const std::string& from, const std::string& to) {
+std::vector<Ride> DatabaseManager::findRideMatches(const std::string& from, const std::string& to, RideType rideType, const std::string& userID) {
     std::vector<Ride> matches;
-    const char* sql = "SELECT userID, from_location, to_location, time, mode FROM rides WHERE from_location = ? AND to_location = ?;";
+    const char* sql = "SELECT userID, from_location, to_location, time, mode, ride_type, current_capacity, max_capacity, females_only FROM rides WHERE from_location = ? AND to_location = ? AND ride_type = ? AND current_capacity < max_capacity;";
     sqlite3_stmt* stmt;
 
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -199,6 +239,7 @@ std::vector<Ride> DatabaseManager::findRideMatches(const std::string& from, cons
 
     sqlite3_bind_text(stmt, 1, from.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, to.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 3, static_cast<int>(rideType));
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         Ride ride;
@@ -207,6 +248,22 @@ std::vector<Ride> DatabaseManager::findRideMatches(const std::string& from, cons
         ride.to = (char*)sqlite3_column_text(stmt, 2);
         ride.time = (char*)sqlite3_column_text(stmt, 3);
         ride.mode = (char*)sqlite3_column_text(stmt, 4);
+        ride.rideType = static_cast<RideType>(sqlite3_column_int(stmt, 5));
+        ride.currentCapacity = sqlite3_column_int(stmt, 6);
+        ride.maxCapacity = sqlite3_column_int(stmt, 7);
+        ride.femalesOnly = sqlite3_column_int(stmt, 8) == 1;
+        
+        // Filter out females-only rides for non-females
+        if (ride.femalesOnly && !userID.empty()) {
+            User user = getUserByID(userID);
+            if (user.gender != "female") {
+                continue; // Skip this ride
+            }
+        }
+        
+        if (!ride.userID.empty()) {
+            ride.participants.push_back(ride.userID);
+        }
         matches.push_back(ride);
     }
 
@@ -214,8 +271,8 @@ std::vector<Ride> DatabaseManager::findRideMatches(const std::string& from, cons
     return matches;
 }
 
-bool DatabaseManager::insertRequest(const std::string& userID, const std::string& from, const std::string& to) {
-    const char* sql = "INSERT INTO requests (userID, from_location, to_location) VALUES (?, ?, ?);";
+bool DatabaseManager::insertRequest(const std::string& userID, const std::string& from, const std::string& to, RideType rideType) {
+    const char* sql = "INSERT INTO requests (userID, from_location, to_location, ride_type) VALUES (?, ?, ?, ?);";
     sqlite3_stmt* stmt;
     
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -224,6 +281,7 @@ bool DatabaseManager::insertRequest(const std::string& userID, const std::string
     sqlite3_bind_text(stmt, 1, userID.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, from.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 3, to.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 4, static_cast<int>(rideType));
 
     rc = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
@@ -290,6 +348,24 @@ bool DatabaseManager::insertMessage(const std::string& senderID, const std::stri
 
     sqlite3_bind_text(stmt, 1, senderID.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, messageText.c_str(), -1, SQLITE_STATIC);
+
+    rc = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+    
+    return rc == SQLITE_DONE;
+}
+
+bool DatabaseManager::updateRideCapacity(const std::string& userID, const std::string& from, const std::string& to, int newCapacity) {
+    const char* sql = "UPDATE rides SET current_capacity = ? WHERE userID = ? AND from_location = ? AND to_location = ?;";
+    sqlite3_stmt* stmt;
+    
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) return false;
+
+    sqlite3_bind_int(stmt, 1, newCapacity);
+    sqlite3_bind_text(stmt, 2, userID.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, from.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 4, to.c_str(), -1, SQLITE_STATIC);
 
     rc = sqlite3_step(stmt);
     sqlite3_finalize(stmt);

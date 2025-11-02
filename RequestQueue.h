@@ -19,7 +19,8 @@ private:
 
 public:
     RequestQueue(RideSystem *rs, DatabaseManager *db);
-    std::vector<int> createRequest(const std::string &userID, const std::string &from, const std::string &to);
+    std::vector<int> createRequest(const std::string &userID, const std::string &from, const std::string &to, RideType rideType = RideType::CARPOOL);
+    std::vector<int> createRideOffer(const std::string &userID, const std::string &from, const std::string &to, RideType rideType, bool femalesOnly = false);
     crow::json::wvalue listPending() const;
     bool respondToRequest(int requestID, bool accept, std::string &outMessage);
 };

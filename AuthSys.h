@@ -14,7 +14,7 @@ private:
     std::unordered_map<std::string, User> users; // key: email
 
 public:
-    User registerUser(const std::string &id, const std::string &name, const std::string &email);
+    User registerUser(const std::string &id, const std::string &name, const std::string &email, const std::string &gender = "");
     bool loginUser(const std::string &email);
     bool isRegistered(const std::string &email) const;
     crow::json::wvalue toJson() const;

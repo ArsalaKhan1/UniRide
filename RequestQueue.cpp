@@ -3,16 +3,23 @@
 
 RequestQueue::RequestQueue(RideSystem *rs, DatabaseManager *db) : rideSystem(rs), dbManager(db) {}
 
-std::vector<int> RequestQueue::createRequest(const std::string &userID, const std::string &from, const std::string &to) {
+std::vector<int> RequestQueue::createRequest(const std::string &userID, const std::string &from, const std::string &to, RideType rideType) {
     std::vector<int> createdIDs;
-    auto matches = rideSystem->findMatches(from, to);
+    auto matches = rideSystem->findMatches(from, to, rideType, userID);
     
     std::lock_guard<std::mutex> lock(mtx);
     
     if (matches.empty()) {
-        rideSystem->addRide(userID, from, to, "flexible", "any");
+        // Create new ride based on type
+        std::string mode = (rideType == RideType::BIKE) ? "bike" : 
+                          (rideType == RideType::CARPOOL) ? "car" : "rickshaw";
         
-        Ride newRide(userID, from, to, "flexible", "any");
+        // For rickshaw, first participant creates the group
+        std::string ownerID = userID;
+        
+        rideSystem->addRide(ownerID, from, to, "flexible", mode, rideType);
+        
+        Ride newRide(ownerID, from, to, "flexible", mode, rideType);
         dbManager->insertRide(newRide);
         
         return createdIDs; 
@@ -24,6 +31,23 @@ std::vector<int> RequestQueue::createRequest(const std::string &userID, const st
         queue.push(r);
         createdIDs.push_back(reqID);
     }
+    return createdIDs;
+}
+
+std::vector<int> RequestQueue::createRideOffer(const std::string &userID, const std::string &from, const std::string &to, RideType rideType, bool femalesOnly) {
+    std::vector<int> createdIDs;
+    std::lock_guard<std::mutex> lock(mtx);
+    
+    std::string mode = (rideType == RideType::BIKE) ? "bike" : "car";
+    
+    // Only bike and carpool can have owners
+    if (rideType != RideType::RICKSHAW) {
+        rideSystem->addRide(userID, from, to, "flexible", mode, rideType, femalesOnly);
+        
+        Ride newRide(userID, from, to, "flexible", mode, rideType, femalesOnly);
+        dbManager->insertRide(newRide);
+    }
+    
     return createdIDs;
 }
 
