@@ -10,17 +10,45 @@ enum class RideType {
     RICKSHAW   // 3 participants max (no owner)
 };
 
+enum class RideStatus {
+    OPEN,      // Accepting requests
+    FULL,      // Capacity reached
+    STARTED,   // Ride in progress
+    COMPLETED  // Ride finished
+};
+
+enum class RequestStatus {
+    PENDING,
+    ACCEPTED,
+    REJECTED
+};
+
+struct JoinRequest {
+    std::string userID;
+    RequestStatus status;
+    std::string timestamp;
+    
+    JoinRequest(const std::string& uid) : userID(uid), status(RequestStatus::PENDING) {}
+};
+
 struct Ride {
-    std::string userID;     // ID of the user offering or taking the ride
+    int rideID;             // Unique ride identifier
+    std::string ownerID;    // ID of ride owner (empty for rickshaw)
     std::string from;       // Starting point
     std::string to;         // Destination
     std::string time;       // Time of the ride
-    std::string mode;       // Mode of transport (car, bike, etc.)
+    std::string mode;       // Mode of transport
     RideType rideType;      // Type of ride
+    RideStatus status;      // Current ride status
     int currentCapacity;    // Current number of people
-    int maxCapacity;        // Maximum capacity based on ride type
-    std::vector<std::string> participants; // List of participant IDs
-    bool femalesOnly;       // Optional preference for females only
+    int maxCapacity;        // Maximum capacity
+    std::vector<std::string> participants; // Confirmed participants
+    std::vector<JoinRequest> pendingRequests; // Pending join requests
+    bool femalesOnly;       // Gender preference
+    std::string genderPreference; // "male", "female", "any"
+
+    // Legacy field for compatibility
+    std::string userID;     // Same as ownerID
 
     Ride() = default;
     Ride(const std::string &id, const std::string &f, const std::string &t,
@@ -28,6 +56,11 @@ struct Ride {
     
     bool canAcceptMoreParticipants() const;
     int getAvailableSlots() const;
+    bool hasPendingRequest(const std::string& userID) const;
+    void addJoinRequest(const std::string& userID);
+    bool approveRequest(const std::string& userID);
+    bool rejectRequest(const std::string& userID);
+    void updateStatus();
 };
 
 #endif // RIDE_H

@@ -25,7 +25,7 @@ public:
     std::vector<User> getAllUsers();
     
     // Ride operations
-    bool insertRide(const Ride& ride);
+    int insertRide(Ride& ride);
     std::vector<Ride> getAllRides();
     std::vector<Ride> findRideMatches(const std::string& from, const std::string& to, RideType rideType, const std::string& userID = "");
     bool updateRideCapacity(const std::string& userID, const std::string& from, const std::string& to, int newCapacity);
@@ -34,13 +34,24 @@ public:
     bool insertRequest(const std::string& userID, const std::string& from, const std::string& to, RideType rideType);
     bool updateRequestStatus(int requestID, const std::string& status);
     
-    // OTP operations
-    bool insertOTPSession(const std::string& userA, const std::string& userB, const std::string& otp);
-    bool updateOTPStatus(const std::string& userA, const std::string& userB, const std::string& status);
-    
     // Message operations
     bool insertMessage(const std::string& senderID, const std::string& messageText);
     std::vector<std::pair<std::string, std::string>> getAllMessages(); // returns (sender, message) pairs
+    
+    // User preferences operations
+    bool updateUserPreferences(const std::string& userID, const std::string& genderPref, int vehicleType);
+    bool getUserPreferences(const std::string& userID, std::string& genderPref, int& vehicleType);
+    
+    // Enhanced ride operations
+    std::vector<Ride> findMatchingRides(const std::string& from, const std::string& to, 
+                                       RideType rideType, const std::string& userID, 
+                                       const std::string& genderPref = "any");
+    bool insertJoinRequest(int rideID, const std::string& userID);
+    bool updateJoinRequestStatus(int rideID, const std::string& userID, const std::string& status);
+    bool updateRideStatus(int rideID, const std::string& status);
+    bool updateRideCapacityByID(int rideID, int newCapacity);
+    std::vector<std::pair<std::string, std::string>> getPendingRequests(int rideID); // returns (userID, timestamp) pairs
+    bool hasActiveRequest(const std::string& userID);
 };
 
 #endif // DATABASEMANAGER_H
