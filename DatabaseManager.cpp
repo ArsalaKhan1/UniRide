@@ -88,10 +88,18 @@ bool DatabaseManager::initialize() {
         );
     )";
 
+    // Create students table
+    const char* createStudentsTable = R"(
+        CREATE TABLE IF NOT EXISTS students (
+            enrollment_id TEXT PRIMARY KEY,
+            email_pattern TEXT
+        );
+    )";
+
     char* errMsg = 0;
-    const char* tables[] = {createUsersTable, createRidesTable, createJoinRequestsTable, createRequestsTable, createMessagesTable};
+    const char* tables[] = {createUsersTable, createRidesTable, createJoinRequestsTable, createRequestsTable, createMessagesTable, createStudentsTable};
     
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 6; i++) {
         rc = sqlite3_exec(db, tables[i], 0, 0, &errMsg);
         if (rc != SQLITE_OK) {
             std::cerr << "SQL error: " << errMsg << std::endl;
@@ -129,6 +137,21 @@ bool DatabaseManager::initialize() {
         if (errMsg) {
             sqlite3_free(errMsg);
             errMsg = 0;
+        }
+    }
+
+    // Populate mock students table
+    const char* inserts[] = {
+        "INSERT OR IGNORE INTO students VALUES('NED/0393/2024', 'khan4735002@cloud.neduet.edu.pk');",
+        "INSERT OR IGNORE INTO students VALUES('NED/0887/2024', 'soomro4720844@cloud.neduet.edu.pk');",
+        "INSERT OR IGNORE INTO students VALUES('NED/1915/2024', 'rafique4735048@cloud.neduet.edu.pk');"
+    };
+
+    for (auto sql : inserts) {
+        if (sqlite3_exec(db, sql, 0, 0, &errMsg) != SQLITE_OK) {
+            std::cerr << "Error inserting student: " << errMsg << std::endl;
+            sqlite3_free(errMsg);
+            return false;
         }
     }
 
@@ -596,4 +619,22 @@ bool DatabaseManager::updateRideCapacityByID(int rideID, int newCapacity) {
     sqlite3_finalize(stmt);
     
     return rc == SQLITE_DONE;
+}
+
+bool DatabaseManager::isValidEnrollment(const std::string& enrollmentID) {
+    const char* sql = "SELECT COUNT(*) FROM students WHERE enrollment_id = ?;";
+    sqlite3_stmt* stmt;
+    bool exists = false;
+
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) return false;
+
+    sqlite3_bind_text(stmt, 1, enrollmentID.c_str(), -1, SQLITE_STATIC);
+
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        exists = sqlite3_column_int(stmt, 0) > 0;
+    }
+
+    sqlite3_finalize(stmt);
+    return exists;
 }

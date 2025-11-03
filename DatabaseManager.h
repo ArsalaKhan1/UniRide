@@ -50,8 +50,10 @@ public:
     bool updateJoinRequestStatus(int rideID, const std::string& userID, const std::string& status);
     bool updateRideStatus(int rideID, const std::string& status);
     bool updateRideCapacityByID(int rideID, int newCapacity);
+    bool isValidEnrollment(const std::string& enrollmentID);
     std::vector<std::pair<std::string, std::string>> getPendingRequests(int rideID); // returns (userID, timestamp) pairs
     bool hasActiveRequest(const std::string& userID);
+    bool isValidStudentEmail(const std::string& email);
 };
 
 #endif // DATABASEMANAGER_H

@@ -29,9 +29,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SQLITE3 REQUIRED sqlite3)
 
+# === Find CURL ===
+find_package(CURL REQUIRED)
+
 # === Link libraries ===
-target_link_libraries(${PROJECT_NAME} PRIVATE ${SQLITE3_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${SQLITE3_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${SQLITE3_LIBRARIES} ${CURL_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SQLITE3_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
 
 # === Windows-specific libraries ===
 if (WIN32)

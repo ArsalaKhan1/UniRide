@@ -3,20 +3,32 @@
 
 #pragma once
 #include <string>
-#include <unordered_map>
 #include <mutex>
+#include <memory>
+#include <unordered_map>
 #include "User.h"
+#include "DatabaseManager.h"
 #include "crow.h"
 
 class AuthSystem {
 private:
     mutable std::mutex mtx;
-    std::unordered_map<std::string, User> users; // key: email
+    std::shared_ptr<DatabaseManager> dbManager;
+    std::unordered_map<std::string, std::string> sessionTokens; // token -> userID
+    
+    std::string generateJWT(const User& user);
+    bool validateJWT(const std::string& token, std::string& userID);
+    std::string generateSessionToken();
+    crow::json::rvalue verifyGoogleToken(const std::string& idToken);
 
 public:
-    User registerUser(const std::string &id, const std::string &name, const std::string &email, const std::string &gender = "");
-    bool loginUser(const std::string &email);
+    AuthSystem(std::shared_ptr<DatabaseManager> db);
+    
+
     bool isRegistered(const std::string &email) const;
+    User handleGoogleAuth(const std::string& idToken, const std::string& enrollmentId);
+    std::string storeSessionToken(const std::string& userID);
+    bool validateSessionToken(const std::string& token, std::string& userID);
     crow::json::wvalue toJson() const;
 };
 #endif // AUTHSYS_H

@@ -28,14 +28,16 @@ std::string rideTypeToString(RideType type) {
 int main() {
     crow::SimpleApp app;
 
-    // Initialize database
-    DatabaseManager dbManager("rideshare.db");
-    if (!dbManager.initialize()) {
+    // Initialize database as shared_ptr
+    auto dbManagerPtr = std::make_shared<DatabaseManager>("rideshare.db");
+    if (!dbManagerPtr->initialize()) {
         std::cerr << "Failed to initialize database!" << std::endl;
         return -1;
     }
 
-    AuthSystem authSystem;
+    // Keep reference for existing code
+    DatabaseManager& dbManager = *dbManagerPtr;
+    AuthSystem authSystem(dbManagerPtr);
     RideSystem rideSystem;
     rideSystem.setDatabaseManager(&dbManager);
     RequestQueue requestQueue(&rideSystem, &dbManager);
@@ -117,44 +119,35 @@ int main() {
         
         return crow::response(res);
     });
-    // USER REGISTRATION
-    CROW_ROUTE(app, "/register").methods("POST"_method)
+    // GOOGLE OAUTH AUTHENTICATION
+    CROW_ROUTE(app, "/auth/google").methods("POST"_method)
     ([&](const crow::request &req) {
         auto data = crow::json::load(req.body);
         if (!data) return crow::response(400, "Invalid JSON");
-
-        auto user = authSystem.registerUser(
-            data["id"].s(),
-            data["name"].s(),
-            data["email"].s(),
-            data["gender"].s()
-        );
         
-        // Save to database
-        if (!dbManager.insertUser(user)) {
-            return crow::response(500, "Failed to save user to database");
+        if (!data.has("idToken") || !data.has("enrollmentId")) {
+            return crow::response(400, "Missing idToken or enrollmentId");
         }
         
-        return crow::response(authSystem.toJson());
-    });
-
-    // LOGIN
-    CROW_ROUTE(app, "/login").methods("POST"_method)
-    ([&](const crow::request &req) {
-        auto data = crow::json::load(req.body);
-        if (!data) return crow::response(400, "Invalid JSON");
-
-        User user = dbManager.getUserByEmail(data["email"].s());
-        bool ok = !user.email.empty();
+        std::string idToken = data["idToken"].s();
+        std::string enrollmentId = data["enrollmentId"].s();
+        User user = authSystem.handleGoogleAuth(idToken, enrollmentId);
+        
+        if (user.userID.empty()) {
+            return crow::response(401, "Invalid token");
+        }
+        
+        std::string sessionToken = authSystem.storeSessionToken(user.userID);
         
         crow::json::wvalue res;
-        res["status"] = ok ? "Login successful" : "User not found";
-        if (ok) {
-            res["user"]["id"] = user.userID;
-            res["user"]["name"] = user.name;
-            res["user"]["email"] = user.email;
-        }
-        return crow::response(res);
+        res["success"] = true;
+        res["user"]["id"] = user.userID;
+        res["user"]["name"] = user.name;
+        res["user"]["email"] = user.email;
+        res["sessionToken"] = sessionToken;
+        res["expiresIn"] = 86400;
+        
+        return crow::response(200, res);
     });
 
 
