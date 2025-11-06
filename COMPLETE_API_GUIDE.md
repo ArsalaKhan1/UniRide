@@ -124,19 +124,6 @@ curl http://localhost:8080/ride/all
 - `availableSlots`: Remaining slots
 - `femalesOnly`: Gender restriction
 
-### Search for Matching Rides
-**Endpoint**: `POST /rides/search`
-
-```bash
-curl -X POST http://localhost:8080/rides/search \
-  -H "Content-Type: application/json" \
-  -d '{
-    "userID": "116860011496725847632",
-    "from": "NED Campus",
-    "to": "Saddar",
-    "rideType": "carpool"
-  }'
-```
 
 ### Join Existing Ride
 **Endpoint**: `POST /ride/join`

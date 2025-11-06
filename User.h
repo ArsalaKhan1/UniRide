@@ -28,12 +28,14 @@ struct User {
     std::string name;
     std::string email;
     std::string gender;
+    std::string enrollment_id;
+    bool verified;
     UserRole role;
     UserPreferences preferences;
     bool hasActiveRequest;
 
     User();
-    User(const std::string &id, const std::string &n, const std::string &e, const std::string &g = "", UserRole r = UserRole::PASSENGER);
+    User(const std::string &id, const std::string &n, const std::string &e, const std::string &g = "", const std::string &ei = "", bool v = false, UserRole r = UserRole::PASSENGER);
 };
 
 #endif // USER_H

@@ -2,6 +2,10 @@
 #include "DatabaseManager.h"
 #include "User.h"
 
+bool RideSystem::initializeLocationGraph(const std::string& dbPath) {
+    return locationGraph.loadFromDatabase(dbPath);
+}
+
 void RideSystem::addRide(const std::string &id, const std::string &from, const std::string &to,
                          const std::string &time, const std::string &mode, RideType rideType, bool femalesOnly) {
     std::lock_guard<std::mutex> lock(mtx);
@@ -12,7 +16,11 @@ std::vector<Ride> RideSystem::findMatches(const std::string &from, const std::st
     std::vector<Ride> matches;
     std::lock_guard<std::mutex> lock(mtx);
     for (const auto &r : rides) {
-        if (r.from == from && r.to == to && r.rideType == rideType && r.canAcceptMoreParticipants()) {
+        // Check proximity using precomputed graph
+        bool fromMatch = locationGraph.areConnected(from, r.from);
+        bool toMatch = locationGraph.areConnected(to, r.to);
+        
+        if (fromMatch && toMatch && r.rideType == rideType && r.canAcceptMoreParticipants()) {
             // Filter out females-only rides for non-females
             if (r.femalesOnly && !userID.empty() && dbManager) {
                 User user = dbManager->getUserByID(userID);
@@ -51,7 +59,11 @@ crow::json::wvalue RideSystem::getAllRidesJson() const {
 bool RideSystem::joinRide(const std::string &userID, const std::string &from, const std::string &to, RideType rideType) {
     std::lock_guard<std::mutex> lock(mtx);
     for (auto &r : rides) {
-        if (r.from == from && r.to == to && r.rideType == rideType && r.canAcceptMoreParticipants()) {
+        // Check proximity using precomputed graph
+        bool fromMatch = locationGraph.areConnected(from, r.from);
+        bool toMatch = locationGraph.areConnected(to, r.to);
+        
+        if (fromMatch && toMatch && r.rideType == rideType && r.canAcceptMoreParticipants()) {
             // Check gender restriction for females-only rides
             if (r.femalesOnly && dbManager) {
                 User user = dbManager->getUserByID(userID);

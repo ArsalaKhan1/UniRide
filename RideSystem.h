@@ -6,6 +6,7 @@
 #include <string>
 #include <mutex>
 #include "Ride.h"
+#include "LocationGraph.h"
 #include "crow.h"
 
 class DatabaseManager;
@@ -16,8 +17,11 @@ private:
     mutable std::mutex mtx;
     std::vector<Ride> rides;
     DatabaseManager* dbManager = nullptr;
+    LocationGraph locationGraph;
 
 public:
+    bool initializeLocationGraph(const std::string& dbPath = "areas.db");
+    LocationGraph& getLocationGraph() { return locationGraph; }
     void addRide(const std::string &id, const std::string &from, const std::string &to,
                  const std::string &time, const std::string &mode, RideType rideType = RideType::CARPOOL, bool femalesOnly = false);
     std::vector<Ride> findMatches(const std::string &from, const std::string &to, RideType rideType, const std::string &userID = "") const;

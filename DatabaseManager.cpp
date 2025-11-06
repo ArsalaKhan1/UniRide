@@ -1,7 +1,7 @@
 #include "DatabaseManager.h"
 #include <iostream>
 
-DatabaseManager::DatabaseManager(const std::string& path) : db(nullptr), dbPath(path) {}
+DatabaseManager::DatabaseManager(const std::string& path) : db(nullptr), dbPath(path), locationGraph(nullptr) {}
 
 DatabaseManager::~DatabaseManager() {
     if (db) {
@@ -306,22 +306,20 @@ std::vector<Ride> DatabaseManager::getAllRides() {
 
 std::vector<Ride> DatabaseManager::findRideMatches(const std::string& from, const std::string& to, RideType rideType, const std::string& userID) {
     std::vector<Ride> matches;
-    const char* sql = "SELECT id, owner_id, from_location, to_location, time, mode, ride_type, current_capacity, max_capacity, females_only FROM rides WHERE from_location = ? AND to_location = ? AND ride_type = ? AND current_capacity < max_capacity AND ride_status = 'open' AND owner_id != ?;";
+    const char* sql = "SELECT id, owner_id, from_location, to_location, time, mode, ride_type, current_capacity, max_capacity, females_only FROM rides WHERE ride_type = ? AND current_capacity < max_capacity AND ride_status = 'open' AND owner_id != ?;";
     sqlite3_stmt* stmt;
 
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK) return matches;
 
-    sqlite3_bind_text(stmt, 1, from.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, to.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 3, static_cast<int>(rideType));
-    sqlite3_bind_text(stmt, 4, userID.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 1, static_cast<int>(rideType));
+    sqlite3_bind_text(stmt, 2, userID.c_str(), -1, SQLITE_STATIC);
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         Ride ride;
         ride.rideID = sqlite3_column_int(stmt, 0);
         ride.ownerID = (char*)sqlite3_column_text(stmt, 1);
-        ride.userID = ride.ownerID; // For compatibility
+        ride.userID = ride.ownerID;
         ride.from = (char*)sqlite3_column_text(stmt, 2);
         ride.to = (char*)sqlite3_column_text(stmt, 3);
         ride.time = (char*)sqlite3_column_text(stmt, 4);
@@ -331,11 +329,15 @@ std::vector<Ride> DatabaseManager::findRideMatches(const std::string& from, cons
         ride.maxCapacity = sqlite3_column_int(stmt, 8);
         ride.femalesOnly = sqlite3_column_int(stmt, 9) == 1;
         
+        // Check proximity using LocationGraph
+        if (locationGraph && !locationGraph->areConnected(from, ride.from)) continue;
+        if (locationGraph && !locationGraph->areConnected(to, ride.to)) continue;
+        
         // Filter out females-only rides for non-females
         if (ride.femalesOnly && !userID.empty()) {
             User user = getUserByID(userID);
             if (user.gender != "female") {
-                continue; // Skip this ride
+                continue;
             }
         }
         
@@ -482,8 +484,7 @@ std::vector<Ride> DatabaseManager::findMatchingRides(const std::string& from, co
         SELECT id, owner_id, from_location, to_location, time, mode, ride_type, 
                current_capacity, max_capacity, females_only, gender_preference, ride_status
         FROM rides 
-        WHERE from_location = ? AND to_location = ? AND ride_type = ? 
-              AND ride_status = 'open' AND current_capacity < max_capacity
+        WHERE ride_type = ? AND ride_status = 'open' AND current_capacity < max_capacity
               AND (gender_preference = 'any' OR gender_preference = ?)
     )";
     sqlite3_stmt* stmt;
@@ -491,16 +492,14 @@ std::vector<Ride> DatabaseManager::findMatchingRides(const std::string& from, co
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK) return matches;
 
-    sqlite3_bind_text(stmt, 1, from.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, to.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 3, static_cast<int>(rideType));
-    sqlite3_bind_text(stmt, 4, genderPref.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 1, static_cast<int>(rideType));
+    sqlite3_bind_text(stmt, 2, genderPref.c_str(), -1, SQLITE_STATIC);
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         Ride ride;
         ride.rideID = sqlite3_column_int(stmt, 0);
         ride.ownerID = (char*)sqlite3_column_text(stmt, 1);
-        ride.userID = ride.ownerID; // For compatibility
+        ride.userID = ride.ownerID;
         ride.from = (char*)sqlite3_column_text(stmt, 2);
         ride.to = (char*)sqlite3_column_text(stmt, 3);
         ride.time = (char*)sqlite3_column_text(stmt, 4);
@@ -510,6 +509,10 @@ std::vector<Ride> DatabaseManager::findMatchingRides(const std::string& from, co
         ride.maxCapacity = sqlite3_column_int(stmt, 8);
         ride.femalesOnly = sqlite3_column_int(stmt, 9) == 1;
         ride.genderPreference = (char*)sqlite3_column_text(stmt, 10);
+        
+        // Check proximity using LocationGraph
+        if (locationGraph && !locationGraph->areConnected(from, ride.from)) continue;
+        if (locationGraph && !locationGraph->areConnected(to, ride.to)) continue;
         
         matches.push_back(ride);
     }

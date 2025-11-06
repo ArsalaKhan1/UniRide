@@ -40,6 +40,15 @@ int main() {
     AuthSystem authSystem(dbManagerPtr);
     RideSystem rideSystem;
     rideSystem.setDatabaseManager(&dbManager);
+    
+    // Initialize location graph for proximity-based matching
+    if (!rideSystem.initializeLocationGraph("areas.db")) {
+        std::cerr << "Warning: Failed to initialize location graph. Proximity matching may not work properly." << std::endl;
+    }
+    
+    // Share location graph with DatabaseManager
+    dbManager.setLocationGraph(&rideSystem.getLocationGraph());
+    
     RequestQueue requestQueue(&rideSystem, &dbManager);
 
     // Chat system
@@ -221,8 +230,9 @@ int main() {
 
         RideType rideType = stringToRideType(data["rideType"].s());
         
-        // Find existing matches first
-        auto matches = dbManager.findRideMatches(data["from"].s(), data["to"].s(), rideType, data["userID"].s());
+        // Find existing matches first using proximity-based matching
+        User user = dbManager.getUserByID(data["userID"].s());
+        auto matches = dbManager.findMatchingRides(data["from"].s(), data["to"].s(), rideType, data["userID"].s(), user.gender);
         
         crow::json::wvalue res;
         res["rideType"] = rideTypeToString(rideType);

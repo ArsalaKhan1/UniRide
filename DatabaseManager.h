@@ -6,15 +6,19 @@
 #include <vector>
 #include "User.h"
 #include "Ride.h"
+#include "LocationGraph.h"
 
 class DatabaseManager {
 private:
     sqlite3* db;
     std::string dbPath;
+    LocationGraph* locationGraph;
 
 public:
     DatabaseManager(const std::string& path = "rideshare.db");
     ~DatabaseManager();
+    
+    void setLocationGraph(LocationGraph* graph) { locationGraph = graph; }
     
     bool initialize();
     
