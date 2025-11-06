@@ -12,9 +12,8 @@ set(FMT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/crow/deps/fmt/include")
 file(GLOB SOURCES
     "${PROJECT_SOURCE_DIR}/*.cpp"
 )
-# Remove buildGraph.cpp and test_proximity.cpp from main executable
+# Remove buildGraph.cpp from main executable
 list(REMOVE_ITEM SOURCES "${PROJECT_SOURCE_DIR}/buildGraph.cpp")
-list(REMOVE_ITEM SOURCES "${PROJECT_SOURCE_DIR}/test_proximity.cpp")
 
 # === Create your executable ===
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -22,8 +21,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 # === Create buildGraph executable ===
 add_executable(buildGraph buildGraph.cpp)
 
-# === Create test_proximity executable ===
-add_executable(test_proximity test_proximity.cpp LocationGraph.cpp)
+
 
 # === Include directories ===
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -50,9 +48,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${SQLITE3_INCLUDE_DIRS} ${CUR
 target_link_libraries(buildGraph PRIVATE ${SQLITE3_LIBRARIES})
 target_include_directories(buildGraph PRIVATE ${SQLITE3_INCLUDE_DIRS})
 
-# === Link libraries for test_proximity ===
-target_link_libraries(test_proximity PRIVATE ${SQLITE3_LIBRARIES})
-target_include_directories(test_proximity PRIVATE ${SQLITE3_INCLUDE_DIRS})
+
 
 # === Windows-specific libraries ===
 if (WIN32)

@@ -95,39 +95,6 @@ int main() {
         return crow::response(res);
     });
 
-    // FIND MATCHING RIDES
-    CROW_ROUTE(app, "/rides/search").methods("POST"_method)
-    ([&](const crow::request &req) {
-        auto data = crow::json::load(req.body);
-        if (!data) return crow::response(400, "Invalid JSON");
-
-        std::string userID = data["userID"].s();
-        std::string from = data["from"].s();
-        std::string to = data["to"].s();
-        RideType rideType = stringToRideType(data["rideType"].s());
-        
-        // Get user's gender for matching
-        User user = dbManager.getUserByID(userID);
-        std::string userGender = user.gender;
-        
-        auto matches = dbManager.findMatchingRides(from, to, rideType, userID, userGender);
-        
-        crow::json::wvalue res;
-        res["matches"] = crow::json::wvalue::list();
-        
-        for (size_t i = 0; i < matches.size(); ++i) {
-            res["matches"][i]["rideID"] = matches[i].rideID;
-            res["matches"][i]["ownerID"] = matches[i].ownerID;
-            res["matches"][i]["from"] = matches[i].from;
-            res["matches"][i]["to"] = matches[i].to;
-            res["matches"][i]["time"] = matches[i].time;
-            res["matches"][i]["rideType"] = rideTypeToString(matches[i].rideType);
-            res["matches"][i]["availableSlots"] = matches[i].getAvailableSlots();
-            res["matches"][i]["femalesOnly"] = matches[i].femalesOnly;
-        }
-        
-        return crow::response(res);
-    });
     // GOOGLE OAUTH AUTHENTICATION
     CROW_ROUTE(app, "/auth/google").methods("POST"_method)
     ([&](const crow::request &req) {
