@@ -1,4 +1,5 @@
 #include "crow.h"
+#include "crow/middlewares/cors.h"
 #include "AuthSys.h"
 #include "RideSystem.h"
 #include "RequestQueue.h"
@@ -6,6 +7,9 @@
 #include "DatabaseManager.h"
 #include <memory>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
 
 // Helper function to convert string to RideType
 RideType stringToRideType(const std::string& typeStr) {
@@ -26,7 +30,18 @@ std::string rideTypeToString(RideType type) {
 }
 
 int main() {
-    crow::SimpleApp app;
+    // Setup CORS
+    crow::App<crow::CORSHandler> app;
+    
+    // Configure CORS
+    auto& cors = app.get_middleware<crow::CORSHandler>();
+    
+    // Configure global CORS rules
+    cors.global()
+        .headers({"Content-Type", "Authorization"})
+        .methods("POST"_method, "GET"_method, "PUT"_method, "DELETE"_method, "OPTIONS"_method)
+        .origin("http://localhost:5173")
+        .allow_credentials();
 
     // Initialize database as shared_ptr
     auto dbManagerPtr = std::make_shared<DatabaseManager>("rideshare.db");
@@ -57,6 +72,60 @@ int main() {
     CROW_ROUTE(app, "/")
     ([]() {
         return "UniRide API is running successfully!";
+    });
+
+    // Google Auth endpoint (verify) — simplified earlier working handler
+    CROW_ROUTE(app, "/auth/google/verify").methods("POST"_method)
+    ([&](const crow::request &req) {
+        auto data = crow::json::load(req.body);
+        if (!data) {
+            crow::json::wvalue err;
+            err["success"] = false;
+            err["error"] = "Invalid JSON";
+            return crow::response(400, err);
+        }
+
+        if (!data.has("idToken") || !data.has("enrollmentId")) {
+            crow::json::wvalue err;
+            err["success"] = false;
+            err["error"] = "Missing idToken or enrollmentId";
+            return crow::response(400, err);
+        }
+
+        std::string idToken = data["idToken"].s();
+        std::string enrollmentId = data["enrollmentId"].s();
+
+        // Dev-mode shortcut
+        if (idToken.empty()) {
+            crow::json::wvalue body;
+            body["success"] = true;
+            body["user"]["id"] = std::string("dev_") + enrollmentId;
+            body["user"]["name"] = std::string("Dev User ") + enrollmentId;
+            body["user"]["email"] = std::string("dev_") + enrollmentId + "@cloud.neduet.edu.pk";
+            body["sessionToken"] = "dev_token";
+            body["expiresIn"] = 86400;
+            return crow::response(body);
+        }
+
+        User user = authSystem.handleGoogleAuth(idToken, enrollmentId);
+        if (user.userID.empty()) {
+            crow::json::wvalue err;
+            err["success"] = false;
+            err["error"] = "Invalid token";
+            return crow::response(401, err);
+        }
+
+        std::string sessionToken = authSystem.storeSessionToken(user.userID);
+
+        crow::json::wvalue res;
+        res["success"] = true;
+        res["user"]["id"] = user.userID;
+        res["user"]["name"] = user.name;
+        res["user"]["email"] = user.email;
+        res["sessionToken"] = sessionToken;
+        res["expiresIn"] = 86400;
+
+        return crow::response(res);
     });
 
     // SET USER PREFERENCES
@@ -95,39 +164,7 @@ int main() {
         return crow::response(res);
     });
 
-    // GOOGLE OAUTH AUTHENTICATION
-    CROW_ROUTE(app, "/auth/google").methods("POST"_method)
-    ([&](const crow::request &req) {
-        auto data = crow::json::load(req.body);
-        if (!data) return crow::response(400, "Invalid JSON");
-        
-        if (!data.has("idToken") || !data.has("enrollmentId")) {
-            return crow::response(400, "Missing idToken or enrollmentId");
-        }
-        
-        std::string idToken = data["idToken"].s();
-        std::string enrollmentId = data["enrollmentId"].s();
-        User user = authSystem.handleGoogleAuth(idToken, enrollmentId);
-        
-        if (user.userID.empty()) {
-            return crow::response(401, "Invalid token");
-        }
-        
-        std::string sessionToken = authSystem.storeSessionToken(user.userID);
-        
-        crow::json::wvalue res;
-        res["success"] = true;
-        res["user"]["id"] = user.userID;
-        res["user"]["name"] = user.name;
-        res["user"]["email"] = user.email;
-        res["sessionToken"] = sessionToken;
-        res["expiresIn"] = 86400;
-        
-        return crow::response(200, res);
-    });
-
-
-
+    
     // GET ALL RIDES
     CROW_ROUTE(app, "/ride/all").methods("GET"_method)
     ([&]() {

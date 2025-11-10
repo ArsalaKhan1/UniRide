@@ -55,6 +55,8 @@ public:
     bool updateRideStatus(int rideID, const std::string& status);
     bool updateRideCapacityByID(int rideID, int newCapacity);
     bool isValidEnrollment(const std::string& enrollmentID);
+    // Verify that a given enrollment ID maps to the provided student email (stored in students table)
+    bool doesEnrollmentMatchEmail(const std::string& enrollmentID, const std::string& email);
     std::vector<std::pair<std::string, std::string>> getPendingRequests(int rideID); // returns (userID, timestamp) pairs
     bool hasActiveRequest(const std::string& userID);
     bool isValidStudentEmail(const std::string& email);

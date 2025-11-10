@@ -535,4 +535,4 @@ curl -X POST http://localhost:8080/chat/send \
 5. **Gender Preferences**: System respects gender preferences for ride matching
 6. **Location Matching**: Uses proximity-based matching for better ride suggestions
 
-This API provides a complete ride-sharing solution with authentication, matching, communication, and management features suitable for university campus transportation needs.
+This API provides a complete ride-sharing solution with authentication, matching, communication, and management features suitable for university campus transportation needs

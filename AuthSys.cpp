@@ -63,9 +63,9 @@ User AuthSystem::handleGoogleAuth(const std::string& idToken, const std::string&
     std::string name = tokenInfo["name"].s();
     std::string sub = tokenInfo["sub"].s();
     
-    // Check if enrollment ID is valid
-    if (!dbManager->isValidEnrollment(enrollmentId)) {
-        return User(); // Return empty user if enrollment ID not found
+    // Check if enrollment ID exists and matches the Google email
+    if (!dbManager->doesEnrollmentMatchEmail(enrollmentId, email)) {
+        return User(); // Return empty user if enrollment ID not found or does not match email
     }
     
     User existingUser = dbManager->getUserByEmail(email);

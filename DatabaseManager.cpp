@@ -641,3 +641,26 @@ bool DatabaseManager::isValidEnrollment(const std::string& enrollmentID) {
     sqlite3_finalize(stmt);
     return exists;
 }
+
+bool DatabaseManager::doesEnrollmentMatchEmail(const std::string& enrollmentID, const std::string& email) {
+    const char* sql = "SELECT email_pattern FROM students WHERE enrollment_id = ?;";
+    sqlite3_stmt* stmt;
+    std::string pattern;
+
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) return false;
+
+    sqlite3_bind_text(stmt, 1, enrollmentID.c_str(), -1, SQLITE_STATIC);
+
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        const unsigned char* txt = sqlite3_column_text(stmt, 0);
+        if (txt) pattern = reinterpret_cast<const char*>(txt);
+    }
+
+    sqlite3_finalize(stmt);
+
+    if (pattern.empty()) return false;
+
+    // Simple exact match for now. If pattern contains wildcards in future, change to LIKE.
+    return pattern == email;
+}

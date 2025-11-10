@@ -1,13 +1,41 @@
+# CMake build files
 build/
 CMakeFiles/
 CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+CMakeUserPresets.json
+
+# Ninja build files
 build.ninja
 .ninja_deps
 .ninja_log
-cmake_install.cmake
+
+# Compiled binaries
 *.exe
 *.out
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.dylib
 main
+buildGraph
+
+# Databases
 *.db
 *.db-wal
 *.db-shm
+*.sqlite
+*.sqlite3
+areas.db
+rideshare.db
+
+# IDE/Editor
+.vscode/
+.vs/
+*.user
+*.suo
+*.sln
+*.vcxproj*
