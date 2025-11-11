@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Landing from './pages/Landing'
 import Dashboard from './pages/Dashboard'
 import ChatPage from './pages/ChatPage'
+import RideInteractionScreen from './pages/RideInteractionScreen'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Navbar from './components/Navbar'
 
@@ -19,6 +20,11 @@ export default function App() {
         <div className="container mx-auto p-4">
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/ride" element={
+              <PrivateRoute>
+                <RideInteractionScreen />
+              </PrivateRoute>
+            } />
             <Route
               path="/dashboard"
               element={

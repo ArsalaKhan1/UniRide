@@ -7,15 +7,12 @@ export default function Landing() {
   const navigate = useNavigate()
 
   const [enrollmentId, setEnrollmentId] = useState('')
-  const [idToken, setIdToken] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const GSI_CLIENT_ID = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID || ''
 
   useEffect(() => {
-    console.log('[Landing] GSI_CLIENT_ID =', GSI_CLIENT_ID)
-    // Load Google Identity Services script if not already present
     if (!GSI_CLIENT_ID) return
     if ((window as any).google && (window as any).google.accounts) {
       tryRenderButton()
@@ -33,7 +30,6 @@ export default function Landing() {
 
     function tryRenderButton() {
       try {
-        console.log('[Landing] initializing GSI with client_id=', GSI_CLIENT_ID)
         ;(window as any).google.accounts.id.initialize({
           client_id: GSI_CLIENT_ID,
           callback: handleCredentialResponse,
@@ -42,23 +38,17 @@ export default function Landing() {
         })
         ;(window as any).google.accounts.id.renderButton(
           document.getElementById('g_id_signin')!,
-          { theme: 'outline', size: 'large' }
+          { theme: 'outline', size: 'large', width: 320 }
         )
-      } catch (e) {
-        // ignore - script may not be fully ready
-      }
+      } catch {}
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [GSI_CLIENT_ID])
 
-  // Callback from Google Identity Services
-  // New flow: after receiving credential and validating domain, we DO NOT infer enrollment ID from email.
-  // Instead we prompt the user to enter their enrollment ID, then call backend /auth/google with both idToken and enrollmentId.
   const [pendingCredential, setPendingCredential] = useState<string | null>(null)
   const [googleEmail, setGoogleEmail] = useState<string | null>(null)
 
   const handleCredentialResponse = async (response: any) => {
-    console.log('[Landing] handleCredentialResponse', response)
     const credential = response?.credential
     if (!credential) return
     try {
@@ -70,7 +60,6 @@ export default function Landing() {
         setError('Please sign in with your @cloud.neduet.edu.pk university email')
         return
       }
-      // Save credential and email, then ask user to enter their enrollment ID (stored separately in DB)
       setPendingCredential(credential)
       setGoogleEmail(email)
       setError(null)
@@ -79,34 +68,16 @@ export default function Landing() {
     }
   }
 
-  const handleLogin = async (e?: React.FormEvent) => {
-    e?.preventDefault()
-    setLoading(true)
-    setError(null)
-    console.log('[Landing] handleLogin called, idToken:', idToken, 'enrollmentId:', enrollmentId)
-    try {
-      // Manual fallback: if user pasted an idToken and enrollmentId
-      await loginWithGoogle(idToken || 'dev-token', enrollmentId || 'dev-user')
-      navigate('/dashboard')
-    } catch (err: any) {
-      setError(err?.message || 'Login failed')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const confirmEnrollmentForPending = async () => {
-    console.log('[Landing] confirmEnrollmentForPending called, pendingCredential:', pendingCredential, 'enrollmentId:', enrollmentId)
     if (!pendingCredential) return setError('No Google credential present')
     if (!enrollmentId) return setError('Please enter your enrollment ID')
     setLoading(true)
     setError(null)
     try {
       await loginWithGoogle(pendingCredential, enrollmentId)
-      // clear pending
       setPendingCredential(null)
       setGoogleEmail(null)
-      navigate('/dashboard')
+      navigate('/ride')
     } catch (err: any) {
       setError(err?.message || 'Verification failed')
     } finally {
@@ -115,50 +86,53 @@ export default function Landing() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto text-center">
-      <h1 className="text-4xl font-bold text-primary mb-4">UniRide</h1>
-      <p className="mb-6">University ride-sharing for cloud.neduet.edu.pk</p>
-
-      <form onSubmit={handleLogin} className="space-y-3 text-left mx-auto" style={{maxWidth:400}}>
-        <label className="block text-sm">Enrollment ID</label>
-        <input value={enrollmentId} onChange={(e) => setEnrollmentId(e.target.value)} className="w-full border rounded px-2 py-1" placeholder="e.g. student123" />
-
-        <label className="block text-sm">Google ID Token (or use dev token)</label>
-        <input value={idToken} onChange={(e) => setIdToken(e.target.value)} className="w-full border rounded px-2 py-1" placeholder="paste idToken or leave blank for dev" />
-
-        {error && <div className="text-red-600">{error}</div>}
-
-        <div className="text-center">
-          <button disabled={loading} className="px-6 py-2 rounded bg-primary text-white">{loading ? 'Signing in…' : 'Sign in with Google'}</button>
-        </div>
-      </form>
-
-      <div className="mt-4 text-center">
-        <div id="g_id_signin" />
-        {!GSI_CLIENT_ID && (
-          <div className="mt-2 text-sm text-gray-600">Set VITE_GOOGLE_CLIENT_ID in your environment to enable Google Sign-In.</div>
-        )}
-
-        {pendingCredential && (
-          <div className="mt-4 p-3 bg-white rounded shadow text-left max-w-md mx-auto">
-            <div className="font-semibold">Google account detected</div>
-            <div className="text-sm text-gray-700">Signed in as: {googleEmail}</div>
-            <div className="mt-2">Please enter your Enrollment ID (stored in university records) to complete verification:</div>
-            <input value={enrollmentId} onChange={(e) => setEnrollmentId(e.target.value)} className="w-full border rounded px-2 py-1 mt-2" placeholder="Enter your enrollment ID" />
-            <div className="mt-3 text-right">
-              <button onClick={confirmEnrollmentForPending} disabled={loading} className="px-4 py-2 rounded bg-primary text-white">{loading ? 'Verifying…' : 'Confirm Enrollment ID'}</button>
-            </div>
-          </div>
-        )}
+    <div className="max-w-3xl mx-auto px-6 py-16">
+      <div className="text-center">
+        <h1 className="text-5xl font-extrabold text-gray-900 tracking-tight">UniRide</h1>
+        <p className="mt-3 text-lg text-gray-600">University ride-sharing for <span className="font-semibold">cloud.neduet.edu.pk</span></p>
       </div>
 
-      <section className="mt-10 text-left">
-        <h2 className="text-2xl font-semibold mb-2">How it works</h2>
-        <ol className="list-decimal list-inside space-y-2">
-          <li>Sign in with your university email</li>
-          <li>Offer or join rides</li>
-          <li>Chat with ride participants</li>
-        </ol>
+      <div className="mt-10 flex flex-col items-center">
+        <div id="g_id_signin" />
+        {!GSI_CLIENT_ID && (
+          <div className="mt-2 text-sm text-amber-700 bg-amber-50 px-3 py-2 rounded">Set VITE_GOOGLE_CLIENT_ID to enable Google Sign-In.</div>
+        )}
+        {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
+      </div>
+
+      {pendingCredential && (
+        <div className="mt-10 max-w-md mx-auto bg-white rounded-xl shadow-lg p-6">
+          <div className="text-lg font-semibold">Google account detected</div>
+          <div className="text-sm text-gray-600">Signed in as: {googleEmail}</div>
+          <div className="mt-3 text-gray-800">Enter your Enrollment ID to complete verification:</div>
+          <input
+            value={enrollmentId}
+            onChange={(e) => setEnrollmentId(e.target.value)}
+            className="mt-2 w-full border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg px-3 py-2"
+            placeholder="Your enrollment ID"
+          />
+          <div className="mt-4 flex justify-end gap-3">
+            <button onClick={()=>{setPendingCredential(null); setGoogleEmail(null);}} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200">Cancel</button>
+            <button onClick={confirmEnrollmentForPending} disabled={loading} className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60">{loading ? 'Verifying…' : 'Confirm'}</button>
+          </div>
+        </div>
+      )}
+
+      <section className="mt-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-6 bg-white rounded-xl shadow">
+            <div className="text-lg font-semibold">Offer</div>
+            <div className="text-sm text-gray-600 mt-1">Share your car or bike ride with classmates.</div>
+          </div>
+          <div className="p-6 bg-white rounded-xl shadow">
+            <div className="text-lg font-semibold">Request</div>
+            <div className="text-sm text-gray-600 mt-1">Find a car or rickshaw to go together.</div>
+          </div>
+          <div className="p-6 bg-white rounded-xl shadow">
+            <div className="text-lg font-semibold">Chat</div>
+            <div className="text-sm text-gray-600 mt-1">Coordinate details with your group easily.</div>
+          </div>
+        </div>
       </section>
     </div>
   )
