@@ -209,7 +209,12 @@ export default function RideRequestForm() {
               return (
                 <li key={r.rideID} className="p-3 bg-gray-50 rounded-lg flex flex-col md:flex-row md:items-center md:justify-between">
                   <div className="text-gray-900">
-                    <span className="font-semibold">{r.from} → {r.to}</span> | Type: {r.rideType} | Available Slots: {available} | Lead: <span className={r.leadUserID === userID ? 'text-blue-700 font-semibold' : ''}>{r.leadUserName||r.leadUserID}{r.leadUserID === userID ? ' (You - Lead)' : ''}</span>
+                  <span className="font-semibold">{r.from} → {r.to}</span> | 
+Type: {r.rideType} | 
+<span className={available <= 1 ? 'text-red-600 font-bold' : 'text-green-600'}>
+  {available} of {r.maxCapacity} seats available
+</span> | 
+{r.currentCapacity > 1 && <span className="text-blue-600">({r.currentCapacity - 1} already accepted)</span>}
                   </div>
                   <button
                     className="mt-2 md:mt-0 px-3 py-1.5 rounded-lg bg-gray-900 text-white hover:bg-black disabled:opacity-60"

@@ -42,6 +42,9 @@ export const userAPI = {
   async getPreferences(userID: string) {
     return api.get(`/user/preferences/${userID}`)
   },
+  async getAcceptedRequests(userID: string) {
+    return api.get(`/user/${userID}/accepted-requests`)
+  },
 }
 
 export const rideAPI = {
@@ -59,6 +62,9 @@ export const rideAPI = {
   },
   async getRideRequests(rideID: number) {
     return api.get(`/ride/${rideID}/requests`)
+  },
+  async getAcceptedPassengers(rideID: number) {
+    return api.get(`/ride/${rideID}/accepted`)
   },
   async respondToRequest(payload: any) {
     return api.post('/ride/respond', payload)

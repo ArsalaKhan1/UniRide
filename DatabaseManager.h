@@ -60,6 +60,12 @@ public:
     std::vector<std::pair<std::string, std::string>> getPendingRequests(int rideID); // returns (userID, timestamp) pairs
     bool hasActiveRequest(const std::string& userID);
     bool isValidStudentEmail(const std::string& email);
+    
+    // Get accepted requests for a user (for notifications)
+    std::vector<std::pair<int, std::string>> getAcceptedRequestsForUser(const std::string& userID); // returns (rideID, leadUserID) pairs
+    
+    // Get accepted passengers for a ride (for ride leads)
+    std::vector<std::pair<std::string, std::string>> getAcceptedPassengers(int rideID); // returns (userID, userName) pairs
 };
 
 #endif // DATABASEMANAGER_H

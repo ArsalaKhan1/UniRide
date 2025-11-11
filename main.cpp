@@ -338,5 +338,50 @@ int main() {
         return crow::response(chatFeature->getRideMessagesJson(rideID));
     });
 
+    // GET ACCEPTED REQUESTS FOR USER (for notifications)
+    CROW_ROUTE(app, "/user/<string>/accepted-requests").methods("GET"_method)
+    ([&](const std::string& userID) {
+        auto accepted = dbManager.getAcceptedRequestsForUser(userID);
+        crow::json::wvalue res;
+        res["acceptedRequests"] = crow::json::wvalue::list();
+        
+        for (size_t i = 0; i < accepted.size(); ++i) {
+            int rideID = accepted[i].first;
+            std::string leadUserID = accepted[i].second;
+            
+            // Get ride details
+            auto allRides = dbManager.getAllRides();
+            for (const auto& ride : allRides) {
+                if (ride.rideID == rideID) {
+                    User leadUser = dbManager.getUserByID(leadUserID);
+                    res["acceptedRequests"][i]["rideID"] = rideID;
+                    res["acceptedRequests"][i]["from"] = ride.from;
+                    res["acceptedRequests"][i]["to"] = ride.to;
+                    res["acceptedRequests"][i]["rideType"] = rideTypeToString(ride.rideType);
+                    res["acceptedRequests"][i]["leadUserID"] = leadUserID;
+                    res["acceptedRequests"][i]["leadUserName"] = leadUser.name;
+                    break;
+                }
+            }
+        }
+        
+        return crow::response(res);
+    });
+
+    // GET ACCEPTED PASSENGERS FOR RIDE (for ride leads)
+    CROW_ROUTE(app, "/ride/<int>/accepted").methods("GET"_method)
+    ([&](int rideID) {
+        auto passengers = dbManager.getAcceptedPassengers(rideID);
+        crow::json::wvalue res;
+        res["accepted"] = crow::json::wvalue::list();
+        
+        for (size_t i = 0; i < passengers.size(); ++i) {
+            res["accepted"][i]["userID"] = passengers[i].first;
+            res["accepted"][i]["userName"] = passengers[i].second;
+        }
+        
+        return crow::response(res);
+    });
+
     app.port(8080).multithreaded().run();
 }

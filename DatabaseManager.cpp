@@ -664,3 +664,55 @@ bool DatabaseManager::doesEnrollmentMatchEmail(const std::string& enrollmentID, 
     // Simple exact match for now. If pattern contains wildcards in future, change to LIKE.
     return pattern == email;
 }
+
+std::vector<std::pair<int, std::string>> DatabaseManager::getAcceptedRequestsForUser(const std::string& userID) {
+    std::vector<std::pair<int, std::string>> accepted;
+    const char* sql = R"(
+        SELECT jr.ride_id, r.owner_id
+        FROM join_requests jr
+        JOIN rides r ON jr.ride_id = r.id
+        WHERE jr.user_id = ? AND jr.status = 'accepted' AND r.ride_status = 'open'
+    )";
+    sqlite3_stmt* stmt;
+
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) return accepted;
+
+    sqlite3_bind_text(stmt, 1, userID.c_str(), -1, SQLITE_STATIC);
+
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        int rideID = sqlite3_column_int(stmt, 0);
+        std::string leadUserID = (char*)sqlite3_column_text(stmt, 1);
+        accepted.push_back({rideID, leadUserID});
+    }
+
+    sqlite3_finalize(stmt);
+    return accepted;
+}
+
+std::vector<std::pair<std::string, std::string>> DatabaseManager::getAcceptedPassengers(int rideID) {
+    std::vector<std::pair<std::string, std::string>> passengers;
+    const char* sql = R"(
+        SELECT jr.user_id, u.name
+        FROM join_requests jr
+        JOIN users u ON jr.user_id = u.userID
+        WHERE jr.ride_id = ? AND jr.status = 'accepted'
+        ORDER BY jr.created_at ASC
+    )";
+    sqlite3_stmt* stmt;
+
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) return passengers;
+
+    sqlite3_bind_int(stmt, 1, rideID);
+
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        std::string userID = (char*)sqlite3_column_text(stmt, 0);
+        const unsigned char* namePtr = sqlite3_column_text(stmt, 1);
+        std::string userName = namePtr ? (char*)namePtr : "";
+        passengers.push_back({userID, userName});
+    }
+
+    sqlite3_finalize(stmt);
+    return passengers;
+}
