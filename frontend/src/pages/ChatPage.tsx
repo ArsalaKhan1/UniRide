@@ -13,10 +13,12 @@ type Message = {
 export default function ChatPage() {
   const { rideId } = useParams()
   const { user } = useAuth()
+  const currentUserId = user ? String(user.id) : ''
   const [messages, setMessages] = useState<Message[]>([])
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
   const [rideLeadID, setRideLeadID] = useState<string | null>(null)
+  const [userNames, setUserNames] = useState<Record<string,string>>({})
   const [error, setError] = useState<string | null>(null)
 
   // Get ride info to determine lead userID
@@ -28,6 +30,28 @@ export default function ChatPage() {
         const ride = res.data.rides?.find((r: any) => r.rideID === Number(rideId))
         if (ride) {
           setRideLeadID(ride.leadUserID || ride.ownerID)
+          // prime user name map with lead and current user
+          setUserNames(prev => ({...prev, [ride.leadUserID || ride.ownerID]: ride.leadUserName || '' , [String(user?.id || '')]: user?.name || ''}))
+          // fetch accepted passengers to get their names
+          try {
+            const acc = await rideAPI.getAcceptedPassengers(Number(rideId))
+            const accepted = acc.data.accepted || []
+            const mapUpdate: Record<string,string> = {}
+            accepted.forEach((p:any) => { mapUpdate[String(p.userID)] = p.userName })
+            setUserNames(prev => ({...prev, ...mapUpdate}))
+          } catch (e) {
+            // ignore
+          }
+          // Also fetch pending requests to include their senders in the username map
+          try {
+            const pending = await rideAPI.getRideRequests(Number(rideId))
+            const requests = pending.data.requests || []
+            const mapUpdate: Record<string,string> = {}
+            requests.forEach((req:any) => { mapUpdate[String(req.userID)] = req.userName || req.userID })
+            setUserNames(prev => ({...prev, ...mapUpdate}))
+          } catch (e) {
+            // ignore
+          }
         }
       } catch (e) {
         console.error('Failed to fetch ride info', e)
@@ -47,9 +71,46 @@ export default function ChatPage() {
     }
   }
 
+  // Periodically refresh all participant usernames to ensure user 3 can see user 2's name
+  const fetchAllParticipants = async () => {
+    if (!rideId) return
+    try {
+      // Fetch accepted passengers
+      try {
+        const acc = await rideAPI.getAcceptedPassengers(Number(rideId))
+        const accepted = acc.data.accepted || []
+        const mapUpdate: Record<string,string> = {}
+        accepted.forEach((p:any) => { mapUpdate[String(p.userID)] = p.userName })
+        setUserNames(prev => ({...prev, ...mapUpdate}))
+      } catch (e) {
+        // ignore
+      }
+      // Also fetch pending requests
+      try {
+        const pending = await rideAPI.getRideRequests(Number(rideId))
+        const requests = pending.data.requests || []
+        const mapUpdate: Record<string,string> = {}
+        requests.forEach((req:any) => { mapUpdate[String(req.userID)] = req.userName || req.userID })
+        setUserNames(prev => ({...prev, ...mapUpdate}))
+      } catch (e) {
+        // ignore
+      }
+    } catch (e) {
+      console.error('Failed to fetch all participants', e)
+    }
+  }
+
   useEffect(() => {
     fetch()
     const id = setInterval(fetch, 5000)
+    return () => clearInterval(id)
+  }, [rideId])
+
+  useEffect(() => {
+    if (!rideId) return
+    // Refresh participant names every 3 seconds to catch late-joining users
+    fetchAllParticipants()
+    const id = setInterval(fetchAllParticipants, 3000)
     return () => clearInterval(id)
   }, [rideId])
 
@@ -66,7 +127,7 @@ export default function ChatPage() {
     try {
       // Hub-and-spoke model: if user is lead, send with empty recipient (broadcast)
       // If user is passenger, send to lead
-      const recipient = user.id === rideLeadID ? '' : rideLeadID
+  const recipient = currentUserId === (rideLeadID || '') ? '' : rideLeadID
       const res = await chatAPI.send({ 
         sender: user.id, 
         recipient: recipient, 
@@ -100,15 +161,17 @@ export default function ChatPage() {
             <div className="text-gray-500 text-center py-8">No messages yet. Start the conversation!</div>
           ) : (
             messages.map((m, i) => {
-              const isOwnMessage = m.sender === user.id
+              const isOwnMessage = m.sender === currentUserId
+              const senderName = isOwnMessage ? 'You' : (userNames[m.sender] || m.sender)
+              // Align own messages to the left as requested; recipient messages also left-aligned
               return (
-                <div key={i} className={`mb-3 ${isOwnMessage ? 'text-right' : 'text-left'}`}>
-                  <div className={`inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${isOwnMessage ? 'bg-blue-600 text-white' : 'bg-white border border-gray-300'}`}>
-                    <div className={`text-xs ${isOwnMessage ? 'text-blue-100' : 'text-gray-600'} mb-1`}>
-                      {isOwnMessage ? 'You' : m.sender}
-                      {m.timestamp && <span className="ml-2">{m.timestamp}</span>}
-                    </div>
-                    <div className={isOwnMessage ? 'text-white' : 'text-gray-900'}>{m.text}</div>
+                <div key={i} className="mb-4 flex flex-col items-start">
+                  <div className="flex items-center text-xs text-gray-600 mb-1">
+                    <span className="font-medium mr-2">{senderName}</span>  
+                    {m.timestamp && <span className="text-gray-500">{m.timestamp}</span>}
+                  </div>
+                  <div className={`inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${isOwnMessage ? 'bg-blue-600' : 'bg-white border border-gray-300'}`}>
+                    <div className="text-gray-900">{m.text}</div>
                   </div>
                 </div>
               )

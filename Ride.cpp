@@ -13,12 +13,12 @@ Ride::Ride(const std::string &id, const std::string &f, const std::string &t,
             currentCapacity = 1; // Owner counts as 1
             break;
         case RideType::CARPOOL:
-            maxCapacity = 4; // 4 passengers (driver not counted)
-            currentCapacity = 0; // Start with 0, only count passengers
+            maxCapacity = 4; 
+            currentCapacity = 1; 
             break;
         case RideType::RICKSHAW:
             maxCapacity = 3;
-            currentCapacity = ownerID.empty() ? 0 : 1;
+            currentCapacity = 1;
             break;
     }
     

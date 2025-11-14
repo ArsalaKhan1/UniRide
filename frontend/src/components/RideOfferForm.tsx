@@ -74,7 +74,21 @@ export default function RideOfferForm() {
       </div>
       <div className="mt-4">
         <label className="block text-sm text-gray-700 mb-1">Seats Available</label>
-        <input type="number" min={1} value={seats} onChange={e => setSeats(Number(e.target.value))} className="w-28 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        <select value={seats} onChange={e => setSeats(Number(e.target.value))} className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          {rideType === 'bike' ? (
+            <>
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+            </>
+          ) : (
+            <>
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+              <option value={3}>3</option>
+              <option value={4}>4</option>
+            </>
+          )}
+        </select>
       </div>
       <div className="mt-6">
         <button type="submit" disabled={loading} className="px-5 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60">{loading ? 'Posting…' : 'Post Ride Offer'}</button>

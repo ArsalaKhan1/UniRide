@@ -668,10 +668,15 @@ bool DatabaseManager::doesEnrollmentMatchEmail(const std::string& enrollmentID, 
 std::vector<std::pair<int, std::string>> DatabaseManager::getAcceptedRequestsForUser(const std::string& userID) {
     std::vector<std::pair<int, std::string>> accepted;
     const char* sql = R"(
-        SELECT jr.ride_id, r.owner_id
+        SELECT jr.ride_id, 
+               COALESCE(r.owner_id, 
+                   (SELECT jr2.user_id FROM join_requests jr2 
+                    WHERE jr2.ride_id = r.id AND jr2.status IN ('accepted', 'pending')
+                    ORDER BY jr2.created_at ASC LIMIT 1)) AS lead_user_id
         FROM join_requests jr
         JOIN rides r ON jr.ride_id = r.id
-        WHERE jr.user_id = ? AND jr.status = 'accepted' AND r.ride_status = 'open'
+        WHERE jr.user_id = ? AND jr.status = 'accepted' AND r.ride_status IN ('open', 'full')
+        ORDER BY jr.ride_id ASC
     )";
     sqlite3_stmt* stmt;
 
@@ -682,8 +687,11 @@ std::vector<std::pair<int, std::string>> DatabaseManager::getAcceptedRequestsFor
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         int rideID = sqlite3_column_int(stmt, 0);
-        std::string leadUserID = (char*)sqlite3_column_text(stmt, 1);
-        accepted.push_back({rideID, leadUserID});
+        const unsigned char* leadUserIDPtr = sqlite3_column_text(stmt, 1);
+        std::string leadUserID = leadUserIDPtr ? (char*)leadUserIDPtr : "";
+        if (!leadUserID.empty()) {
+            accepted.push_back({rideID, leadUserID});
+        }
     }
 
     sqlite3_finalize(stmt);

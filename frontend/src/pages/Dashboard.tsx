@@ -57,6 +57,13 @@ export default function Dashboard() {
     try {
       await rideAPI.respondToRequest({ rideID, userID: reqUserID, accept })
       setPendingRequests(pr => ({...pr, [rideID]: pr[rideID]?.filter((r:any)=>r.userID!==reqUserID) || []}))
+      // Refresh accepted passengers for this ride immediately so the lead sees the chat button
+      try {
+        const acceptedRes = await rideAPI.getAcceptedPassengers(rideID)
+        setAcceptedPassengers(ap => ({...ap, [rideID]: acceptedRes.data.accepted || []}))
+      } catch (e) {
+        console.error('Failed to fetch accepted passengers after response', e)
+      }
       refreshMyRides()
     } catch (e) {
       console.error('Failed to respond to request', e)
@@ -90,9 +97,12 @@ export default function Dashboard() {
             {accepted.length > 0 && (
               <div className="mb-3 p-3 bg-green-50 rounded-lg">
                 <div className="font-semibold text-green-800 mb-1">Accepted Passengers ({accepted.length}):</div>
-                <ul className="text-sm text-green-700">
+                <ul className="text-sm text-green-700 space-y-1">
                   {accepted.map((p:any) => (
-                    <li key={p.userID}>• {p.userName || p.userID}</li>
+                    <li key={p.userID} className="flex items-center justify-between">
+                      <span>• {p.userName || p.userID}</span>
+                      <Link to={`/chat/${ride.rideID}`} className="ml-4 text-sm text-blue-600 underline">Open Chat</Link>
+                    </li>
                   ))}
                 </ul>
               </div>

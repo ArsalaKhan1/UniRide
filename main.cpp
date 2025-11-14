@@ -90,7 +90,7 @@ int main() {
         if (user.userID.empty()) {
             crow::json::wvalue err;
             err["success"] = false;
-            err["error"] = "Invalid token or enrollment ID";
+            err["error"] = "Invalid Enrollment ID";
             return crow::response(401, err);
         }
 
@@ -151,8 +151,10 @@ int main() {
         res["rides"] = crow::json::wvalue::list();
         
         for (size_t i = 0; i < rides.size(); ++i) {
+            User leadUser = dbManager.getUserByID(rides[i].ownerID);
             res["rides"][i]["rideID"] = rides[i].rideID;
             res["rides"][i]["leadUserID"] = rides[i].ownerID;
+            res["rides"][i]["leadUserName"] = leadUser.name;
             res["rides"][i]["from"] = rides[i].from;
             res["rides"][i]["to"] = rides[i].to;
             res["rides"][i]["time"] = rides[i].time;
@@ -181,6 +183,38 @@ int main() {
         
         Ride ride(data["userID"].s(), data["from"].s(), data["to"].s(), 
                   "now", "offer", rideType, femalesOnly);
+
+        // Interpret `seats` from the frontend as passenger seats (excluding owner)
+        // when an owner is present for bike/carpool. Internally the code stores
+        // maxCapacity as the total number of people. To keep existing logic
+        // (where currentCapacity starts at 1 for an owner), add 1 to the
+        // frontend-provided passenger seats when an owner exists. If there is
+        // no owner (e.g., rickshaw-like flows created without an owner), treat
+        // the provided seats as the total capacity and ensure the creator is
+        // counted in currentCapacity/participants when appropriate.
+        if (data.has("seats")) {
+            int seatsFromFrontend = data["seats"].i();
+
+            if (!ride.ownerID.empty() && (ride.rideType == RideType::BIKE || ride.rideType == RideType::CARPOOL)) {
+                // Frontend gave passenger seats excluding owner; store total people count
+                ride.maxCapacity = seatsFromFrontend + 1;
+                // Ensure owner is counted as current participant
+                ride.currentCapacity = 1;
+                if (std::find(ride.participants.begin(), ride.participants.end(), ride.ownerID) == ride.participants.end() && !ride.ownerID.empty()) {
+                    ride.participants.push_back(ride.ownerID);
+                }
+            } else {
+                // No owner or other ride types: treat seats as total capacity.
+                ride.maxCapacity = seatsFromFrontend;
+                // If creator exists, ensure they are counted
+                if (!ride.ownerID.empty()) {
+                    ride.currentCapacity = 1;
+                    if (std::find(ride.participants.begin(), ride.participants.end(), ride.ownerID) == ride.participants.end()) {
+                        ride.participants.push_back(ride.ownerID);
+                    }
+                }
+            }
+        }
         
         int rideID = dbManager.insertRide(ride);
         if (rideID == -1) {
@@ -192,7 +226,7 @@ int main() {
         crow::json::wvalue res;
         res["message"] = "Ride created";
         res["rideType"] = rideTypeToString(rideType);
-        res["maxCapacity"] = (rideType == RideType::BIKE) ? 2 : 4;
+        res["maxCapacity"] = ride.maxCapacity;
         res["rideID"] = ride.rideID;
         
         return crow::response(res);
@@ -216,8 +250,15 @@ int main() {
             res["matches"] = crow::json::wvalue::list();
             
             for (size_t i = 0; i < matches.size(); ++i) {
+                User leadUser = dbManager.getUserByID(matches[i].ownerID);
                 res["matches"][i]["rideID"] = matches[i].rideID;
                 res["matches"][i]["leadUserID"] = matches[i].ownerID;
+                res["matches"][i]["leadUserName"] = leadUser.name;
+                // Add a display string that includes username, ride type, and available seats
+                {
+                    std::string display = leadUser.name + " - " + rideTypeToString(matches[i].rideType) + " - " + std::to_string(matches[i].getAvailableSlots()) + " seats";
+                    res["matches"][i]["leadDisplay"] = display;
+                }
                 res["matches"][i]["from"] = matches[i].from;
                 res["matches"][i]["to"] = matches[i].to;
                 res["matches"][i]["time"] = matches[i].time;
@@ -225,15 +266,28 @@ int main() {
                 res["matches"][i]["availableSlots"] = matches[i].getAvailableSlots();
             }
         } else {
+            // Always record the user's request
             dbManager.insertRequest(data["userID"].s(), data["from"].s(), data["to"].s(), rideType);
-            Ride newRide(data["userID"].s(), data["from"].s(), data["to"].s(), "now", "request", rideType, false);
-            int rideID = dbManager.insertRide(newRide);
-            chatFeature->SetRideLead(rideID, data["userID"].s());
-            
-            res["message"] = "You are now the lead";
-            res["rideID"] = rideID;
-            res["leadUserID"] = data["userID"].s();
-            res["matches"] = crow::json::wvalue::list();
+
+            // If this call is only a search (frontend sets searchOnly=true), do NOT auto-create a ride.
+            bool isSearchOnly = data.has("searchOnly") ? (data["searchOnly"].b()) : false;
+
+            if (!isSearchOnly) {
+                Ride newRide(data["userID"].s(), data["from"].s(), data["to"].s(), "now", "request", rideType, false);
+                int rideID = dbManager.insertRide(newRide);
+                chatFeature->SetRideLead(rideID, data["userID"].s());
+
+                User leadUser = dbManager.getUserByID(data["userID"].s());
+                res["message"] = "You are now the lead";
+                res["rideID"] = rideID;
+                res["leadUserID"] = data["userID"].s();
+                res["leadUserName"] = leadUser.name;
+                res["matches"] = crow::json::wvalue::list();
+            } else {
+                // Search-only: inform caller that no matches were found and do not create rides
+                res["message"] = "No matching requests found";
+                res["matches"] = crow::json::wvalue::list();
+            }
         }
         
         return crow::response(res);
@@ -305,6 +359,9 @@ int main() {
         
         for (size_t i = 0; i < requests.size(); ++i) {
             res["requests"][i]["userID"] = requests[i].first;
+            // Include the requester's username alongside their ID
+            User reqUser = dbManager.getUserByID(requests[i].first);
+            res["requests"][i]["userName"] = reqUser.name;
             res["requests"][i]["timestamp"] = requests[i].second;
         }
         

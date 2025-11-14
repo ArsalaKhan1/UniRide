@@ -97,7 +97,16 @@ export default function Landing() {
         {!GSI_CLIENT_ID && (
           <div className="mt-2 text-sm text-amber-700 bg-amber-50 px-3 py-2 rounded">Set VITE_GOOGLE_CLIENT_ID to enable Google Sign-In.</div>
         )}
-        {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
+        {error && error !== 'Server: Invalid Enrollment ID' && (
+          <div className="mt-3 text-sm">
+            {/* Only color certain server error strings red; do not show 'Server: Invalid Enrollment ID' here */}
+            {(error === 'Server: Invalid token or enrollment ID' || error === 'Please sign in with your @cloud.neduet.edu.pk university email') ? (
+              <span style={{ color: '#B91C1C' }}>{error}</span>
+            ) : (
+              <span>{error}</span>
+            )}
+          </div>
+        )}
       </div>
 
       {pendingCredential && (
@@ -111,6 +120,15 @@ export default function Landing() {
             className="mt-2 w-full border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg px-3 py-2"
             placeholder="Your enrollment ID"
           />
+          {error && (
+            <div className="mt-3 text-sm">
+              {(error === 'Server: Invalid Enrollment ID' || error === 'Please sign in with your @cloud.neduet.edu.pk university email') ? (
+                <span style={{ color: '#B91C1C' }}>{error}</span>
+              ) : (
+                <span>{error}</span>
+              )}
+            </div>
+          )}
           <div className="mt-4 flex justify-end gap-3">
             <button onClick={()=>{setPendingCredential(null); setGoogleEmail(null);}} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200">Cancel</button>
             <button onClick={confirmEnrollmentForPending} disabled={loading} className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60">{loading ? 'Verifying…' : 'Confirm'}</button>
