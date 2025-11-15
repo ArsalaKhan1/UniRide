@@ -66,6 +66,12 @@ public:
     
     // Get accepted passengers for a ride (for ride leads)
     std::vector<std::pair<std::string, std::string>> getAcceptedPassengers(int rideID); // returns (userID, userName) pairs
+    
+    // Get active rides for a user (OPEN or STARTED status)
+    std::vector<Ride> getActiveRidesForUser(const std::string& userID);
+    
+    // Get ride by ID
+    Ride getRideByID(int rideID);
 };
 
 #endif // DATABASEMANAGER_H

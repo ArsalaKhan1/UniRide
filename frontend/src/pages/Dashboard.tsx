@@ -70,6 +70,29 @@ export default function Dashboard() {
     }
   }
 
+  const handleStartRide = async (rideID: number) => {
+    if (!user) return
+    try {
+      await rideAPI.startRide(rideID, String(user.id))
+      refreshMyRides()
+    } catch (e: any) {
+      alert(e?.response?.data?.error || 'Failed to start ride')
+    }
+  }
+
+  const handleEndRide = async (rideID: number) => {
+    if (!user) return
+    if (!confirm('Are you sure you want to end this ride? This will disable chat for all participants.')) {
+      return
+    }
+    try {
+      await rideAPI.endRide(rideID, String(user.id))
+      refreshMyRides()
+    } catch (e: any) {
+      alert(e?.response?.data?.error || 'Failed to end ride')
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h2 className="text-3xl font-bold mb-6 text-gray-900">Dashboard</h2>
@@ -77,22 +100,57 @@ export default function Dashboard() {
       {myRides.length>0 ? myRides.map(ride => {
         const accepted = acceptedPassengers[ride.rideID] || []
         const hasAccepted = accepted.length > 0
-        // Show chat button for lead when they have accepted at least one passenger
+        const hasPendingRequests = (pendingRequests[ride.rideID] || []).length > 0
+        // Show chat button for lead when they have accepted passengers, pending requests, or ride is active
+        const rideStatus = ride.status || 'open'
+        const isStarted = rideStatus === 'started'
+        const isCompleted = rideStatus === 'completed'
+        const canStart = !isStarted && !isCompleted
+        const canEnd = isStarted && !isCompleted
+        const showChat = (hasAccepted || hasPendingRequests || isStarted) && !isCompleted
+        
         return (
           <div key={ride.rideID} className="my-4 p-5 bg-white rounded-xl shadow-lg border border-gray-200">
             <div className="flex items-center justify-between mb-3">
               <div>
                 <div className="text-lg font-semibold text-gray-900">Ride #{ride.rideID} to {ride.to}</div>
-                <div className="text-sm text-gray-600">Type: {ride.rideType} | Lead: {ride.leadUserName||ride.leadUserID}</div>
+                <div className="text-sm text-gray-600">
+                  Type: {ride.rideType} | Lead: {ride.leadUserName||ride.leadUserID} | 
+                  Status: <span className={`font-semibold ${
+                    rideStatus === 'started' ? 'text-green-600' : 
+                    rideStatus === 'completed' ? 'text-gray-500' : 
+                    'text-blue-600'
+                  }`}>
+                    {rideStatus.toUpperCase()}
+                  </span>
+                </div>
               </div>
-              {hasAccepted && (
-                <Link
-                  to={`/chat/${ride.rideID}`}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Open Chat
-                </Link>
-              )}
+              <div className="flex gap-2">
+                {canStart && (
+                  <button
+                    onClick={() => handleStartRide(ride.rideID)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    Start Ride
+                  </button>
+                )}
+                {canEnd && (
+                  <button
+                    onClick={() => handleEndRide(ride.rideID)}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  >
+                    End Ride
+                  </button>
+                )}
+                {showChat && (
+                  <Link
+                    to={`/chat/${ride.rideID}`}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Open Chat
+                  </Link>
+                )}
+              </div>
             </div>
             {accepted.length > 0 && (
               <div className="mb-3 p-3 bg-green-50 rounded-lg">

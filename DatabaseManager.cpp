@@ -144,7 +144,10 @@ bool DatabaseManager::initialize() {
     const char* inserts[] = {
         "INSERT OR IGNORE INTO students VALUES('NED/0393/2024', 'khan4735002@cloud.neduet.edu.pk');",
         "INSERT OR IGNORE INTO students VALUES('NED/0887/2024', 'soomro4720844@cloud.neduet.edu.pk');",
-        "INSERT OR IGNORE INTO students VALUES('NED/1915/2024', 'rafique4735048@cloud.neduet.edu.pk');"
+        "INSERT OR IGNORE INTO students VALUES('NED/1915/2024', 'rafique4735048@cloud.neduet.edu.pk');",
+        "INSERT OR IGNORE INTO students VALUES('NED/0636/2024', 'zaman4705230@cloud.neduet.edu.pk');",
+        "INSERT OR IGNORE INTO students VALUES('NED/0556/2024', 'rashid4705806@cloud.neduet.edu.pk');",
+        "INSERT OR IGNORE INTO students VALUES('NED/0770/2024', 'abrar4705198@cloud.neduet.edu.pk');"
     };
 
     for (auto sql : inserts) {
@@ -272,6 +275,15 @@ int DatabaseManager::insertRide(Ride& ride) {
     return -1;
 }
 
+// Helper function to convert string status to RideStatus enum
+static RideStatus stringToRideStatus(const std::string& statusStr) {
+    if (statusStr == "open") return RideStatus::OPEN;
+    if (statusStr == "full") return RideStatus::FULL;
+    if (statusStr == "started") return RideStatus::STARTED;
+    if (statusStr == "completed") return RideStatus::COMPLETED;
+    return RideStatus::OPEN; // default
+}
+
 std::vector<Ride> DatabaseManager::getAllRides() {
     std::vector<Ride> rides;
     const char* sql = "SELECT id, owner_id, from_location, to_location, time, mode, ride_type, current_capacity, max_capacity, females_only, ride_status, gender_preference FROM rides;";
@@ -293,6 +305,8 @@ std::vector<Ride> DatabaseManager::getAllRides() {
         ride.currentCapacity = sqlite3_column_int(stmt, 7);
         ride.maxCapacity = sqlite3_column_int(stmt, 8);
         ride.femalesOnly = sqlite3_column_int(stmt, 9) == 1;
+        const char* statusStr = (char*)sqlite3_column_text(stmt, 10);
+        ride.status = stringToRideStatus(statusStr ? statusStr : "open");
         ride.genderPreference = (char*)sqlite3_column_text(stmt, 11);
         if (!ride.ownerID.empty()) {
             ride.participants.push_back(ride.ownerID);
@@ -509,6 +523,8 @@ std::vector<Ride> DatabaseManager::findMatchingRides(const std::string& from, co
         ride.maxCapacity = sqlite3_column_int(stmt, 8);
         ride.femalesOnly = sqlite3_column_int(stmt, 9) == 1;
         ride.genderPreference = (char*)sqlite3_column_text(stmt, 10);
+        const char* statusStr = (char*)sqlite3_column_text(stmt, 11);
+        ride.status = stringToRideStatus(statusStr ? statusStr : "open");
         
         // Check proximity using LocationGraph
         if (locationGraph && !locationGraph->areConnected(from, ride.from)) continue;
@@ -675,7 +691,7 @@ std::vector<std::pair<int, std::string>> DatabaseManager::getAcceptedRequestsFor
                     ORDER BY jr2.created_at ASC LIMIT 1)) AS lead_user_id
         FROM join_requests jr
         JOIN rides r ON jr.ride_id = r.id
-        WHERE jr.user_id = ? AND jr.status = 'accepted' AND r.ride_status IN ('open', 'full')
+        WHERE jr.user_id = ? AND jr.status = 'accepted' AND r.ride_status IN ('open', 'full', 'started')
         ORDER BY jr.ride_id ASC
     )";
     sqlite3_stmt* stmt;
@@ -723,4 +739,84 @@ std::vector<std::pair<std::string, std::string>> DatabaseManager::getAcceptedPas
 
     sqlite3_finalize(stmt);
     return passengers;
+}
+
+std::vector<Ride> DatabaseManager::getActiveRidesForUser(const std::string& userID) {
+    std::vector<Ride> activeRides;
+    const char* sql = R"(
+        SELECT id, owner_id, from_location, to_location, time, mode, ride_type, 
+               current_capacity, max_capacity, females_only, ride_status, gender_preference
+        FROM rides 
+        WHERE (owner_id = ? OR id IN (
+            SELECT ride_id FROM join_requests 
+            WHERE user_id = ? AND status = 'accepted'
+        ))
+        AND ride_status IN ('open', 'started')
+    )";
+    sqlite3_stmt* stmt;
+
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) return activeRides;
+
+    sqlite3_bind_text(stmt, 1, userID.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, userID.c_str(), -1, SQLITE_STATIC);
+
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        Ride ride;
+        ride.rideID = sqlite3_column_int(stmt, 0);
+        ride.ownerID = (char*)sqlite3_column_text(stmt, 1);
+        ride.userID = ride.ownerID;
+        ride.from = (char*)sqlite3_column_text(stmt, 2);
+        ride.to = (char*)sqlite3_column_text(stmt, 3);
+        ride.time = (char*)sqlite3_column_text(stmt, 4);
+        ride.mode = (char*)sqlite3_column_text(stmt, 5);
+        ride.rideType = static_cast<RideType>(sqlite3_column_int(stmt, 6));
+        ride.currentCapacity = sqlite3_column_int(stmt, 7);
+        ride.maxCapacity = sqlite3_column_int(stmt, 8);
+        ride.femalesOnly = sqlite3_column_int(stmt, 9) == 1;
+        const char* statusStr = (char*)sqlite3_column_text(stmt, 10);
+        ride.status = stringToRideStatus(statusStr ? statusStr : "open");
+        ride.genderPreference = (char*)sqlite3_column_text(stmt, 11);
+        if (!ride.ownerID.empty()) {
+            ride.participants.push_back(ride.ownerID);
+        }
+        activeRides.push_back(ride);
+    }
+
+    sqlite3_finalize(stmt);
+    return activeRides;
+}
+
+Ride DatabaseManager::getRideByID(int rideID) {
+    Ride ride;
+    const char* sql = "SELECT id, owner_id, from_location, to_location, time, mode, ride_type, current_capacity, max_capacity, females_only, ride_status, gender_preference FROM rides WHERE id = ?;";
+    sqlite3_stmt* stmt;
+
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) return ride;
+
+    sqlite3_bind_int(stmt, 1, rideID);
+
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        ride.rideID = sqlite3_column_int(stmt, 0);
+        ride.ownerID = (char*)sqlite3_column_text(stmt, 1);
+        ride.userID = ride.ownerID;
+        ride.from = (char*)sqlite3_column_text(stmt, 2);
+        ride.to = (char*)sqlite3_column_text(stmt, 3);
+        ride.time = (char*)sqlite3_column_text(stmt, 4);
+        ride.mode = (char*)sqlite3_column_text(stmt, 5);
+        ride.rideType = static_cast<RideType>(sqlite3_column_int(stmt, 6));
+        ride.currentCapacity = sqlite3_column_int(stmt, 7);
+        ride.maxCapacity = sqlite3_column_int(stmt, 8);
+        ride.femalesOnly = sqlite3_column_int(stmt, 9) == 1;
+        const char* statusStr = (char*)sqlite3_column_text(stmt, 10);
+        ride.status = stringToRideStatus(statusStr ? statusStr : "open");
+        ride.genderPreference = (char*)sqlite3_column_text(stmt, 11);
+        if (!ride.ownerID.empty()) {
+            ride.participants.push_back(ride.ownerID);
+        }
+    }
+
+    sqlite3_finalize(stmt);
+    return ride;
 }

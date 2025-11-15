@@ -20,6 +20,7 @@ export default function ChatPage() {
   const [rideLeadID, setRideLeadID] = useState<string | null>(null)
   const [userNames, setUserNames] = useState<Record<string,string>>({})
   const [error, setError] = useState<string | null>(null)
+  const [rideStatus, setRideStatus] = useState<string>('open')
 
   // Get ride info to determine lead userID
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function ChatPage() {
         const ride = res.data.rides?.find((r: any) => r.rideID === Number(rideId))
         if (ride) {
           setRideLeadID(ride.leadUserID || ride.ownerID)
+          setRideStatus(ride.status || 'open')
           // prime user name map with lead and current user
           setUserNames(prev => ({...prev, [ride.leadUserID || ride.ownerID]: ride.leadUserName || '' , [String(user?.id || '')]: user?.name || ''}))
           // fetch accepted passengers to get their names
@@ -102,7 +104,18 @@ export default function ChatPage() {
 
   useEffect(() => {
     fetch()
-    const id = setInterval(fetch, 5000)
+    const id = setInterval(() => {
+      fetch()
+      // Also refresh ride status
+      if (rideId) {
+        rideAPI.getAll().then(res => {
+          const ride = res.data.rides?.find((r: any) => r.rideID === Number(rideId))
+          if (ride) {
+            setRideStatus(ride.status || 'open')
+          }
+        }).catch(() => {})
+      }
+    }, 5000)
     return () => clearInterval(id)
   }, [rideId])
 
@@ -119,6 +132,10 @@ export default function ChatPage() {
     if (!user || !rideId || !text.trim()) return
     if (!rideLeadID) {
       setError('Loading ride information...')
+      return
+    }
+    if (rideStatus === 'completed') {
+      setError('Cannot send messages for a completed ride')
       return
     }
 
@@ -152,9 +169,16 @@ export default function ChatPage() {
     return <div className="text-red-600">Please sign in to use chat.</div>
   }
 
+  const isCompleted = rideStatus === 'completed'
+
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h2 className="text-2xl font-bold mb-4 text-gray-900">Chat for Ride #{rideId}</h2>
+      {isCompleted && (
+        <div className="mb-4 p-4 bg-gray-100 border border-gray-300 rounded-lg">
+          <p className="text-gray-700 font-semibold">This ride has been completed. Chat is disabled.</p>
+        </div>
+      )}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="mb-4 h-96 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
           {messages.length === 0 ? (
@@ -186,14 +210,14 @@ export default function ChatPage() {
             value={text} 
             onChange={(e) => setText(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-            placeholder="Type a message..." 
-            disabled={loading || !rideLeadID}
+            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed" 
+            placeholder={isCompleted ? "Chat disabled - ride completed" : "Type a message..."} 
+            disabled={loading || !rideLeadID || isCompleted}
           />
           <button 
             type="submit"
-            disabled={loading || !text.trim() || !rideLeadID} 
-            className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+            disabled={loading || !text.trim() || !rideLeadID || isCompleted} 
+            className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading ? 'Sending...' : 'Send'}
           </button>

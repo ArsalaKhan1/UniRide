@@ -143,6 +143,17 @@ int main() {
         return crow::response(res);
     });
 
+    // Helper function to convert RideStatus to string
+    auto rideStatusToString = [](RideStatus status) -> std::string {
+        switch (status) {
+            case RideStatus::OPEN: return "open";
+            case RideStatus::FULL: return "full";
+            case RideStatus::STARTED: return "started";
+            case RideStatus::COMPLETED: return "completed";
+            default: return "open";
+        }
+    };
+
     // GET ALL RIDES
     CROW_ROUTE(app, "/ride/all").methods("GET"_method)
     ([&]() {
@@ -163,6 +174,7 @@ int main() {
             res["rides"][i]["maxCapacity"] = rides[i].maxCapacity;
             res["rides"][i]["availableSlots"] = rides[i].getAvailableSlots();
             res["rides"][i]["femalesOnly"] = rides[i].femalesOnly;
+            res["rides"][i]["status"] = rideStatusToString(rides[i].status);
         }
         
         return crow::response(res);
@@ -174,6 +186,17 @@ int main() {
         auto data = crow::json::load(req.body);
         if (!data) return crow::response(400, "Invalid JSON");
 
+        std::string userID = data["userID"].s();
+        
+        // Check if user already has an active ride
+        auto activeRides = dbManager.getActiveRidesForUser(userID);
+        if (!activeRides.empty()) {
+            crow::json::wvalue res;
+            res["success"] = false;
+            res["error"] = "You already have an active ride. Please end your current ride before creating a new one.";
+            return crow::response(400, res);
+        }
+
         RideType rideType = stringToRideType(data["rideType"].s());
         bool femalesOnly = data.has("femalesOnly") ? data["femalesOnly"].b() : false;
         
@@ -181,7 +204,7 @@ int main() {
             return crow::response(400, "Rickshaw rides cannot have owners");
         }
         
-        Ride ride(data["userID"].s(), data["from"].s(), data["to"].s(), 
+        Ride ride(userID, data["from"].s(), data["to"].s(), 
                   "now", "offer", rideType, femalesOnly);
 
         // Interpret `seats` from the frontend as passenger seats (excluding owner)
@@ -238,9 +261,20 @@ int main() {
         auto data = crow::json::load(req.body);
         if (!data) return crow::response(400, "Invalid JSON");
 
+        std::string userID = data["userID"].s();
+        
+        // Check if user already has an active ride
+        auto activeRides = dbManager.getActiveRidesForUser(userID);
+        if (!activeRides.empty()) {
+            crow::json::wvalue res;
+            res["success"] = false;
+            res["error"] = "You already have an active ride. Please end your current ride before creating a new one.";
+            return crow::response(400, res);
+        }
+
         RideType rideType = stringToRideType(data["rideType"].s());
-        User user = dbManager.getUserByID(data["userID"].s());
-        auto matches = dbManager.findMatchingRides(data["from"].s(), data["to"].s(), rideType, data["userID"].s(), user.gender);
+        User user = dbManager.getUserByID(userID);
+        auto matches = dbManager.findMatchingRides(data["from"].s(), data["to"].s(), rideType, userID, user.gender);
         
         crow::json::wvalue res;
         res["rideType"] = rideTypeToString(rideType);
@@ -275,7 +309,9 @@ int main() {
             if (!isSearchOnly) {
                 Ride newRide(data["userID"].s(), data["from"].s(), data["to"].s(), "now", "request", rideType, false);
                 int rideID = dbManager.insertRide(newRide);
-                chatFeature->SetRideLead(rideID, data["userID"].s());
+                if (rideID != -1) {
+                    chatFeature->SetRideLead(rideID, data["userID"].s());
+                }
 
                 User leadUser = dbManager.getUserByID(data["userID"].s());
                 res["message"] = "You are now the lead";
@@ -301,6 +337,22 @@ int main() {
 
         std::string userID = data["userID"].s();
         int rideID = data["rideID"].i();
+        
+        // Check if ride exists and is not started or completed
+        Ride ride = dbManager.getRideByID(rideID);
+        if (ride.rideID == 0) {
+            crow::json::wvalue res;
+            res["success"] = false;
+            res["message"] = "Ride not found";
+            return crow::response(404, res);
+        }
+        
+        if (ride.status == RideStatus::STARTED || ride.status == RideStatus::COMPLETED) {
+            crow::json::wvalue res;
+            res["success"] = false;
+            res["message"] = "Cannot join a ride that has already started or been completed";
+            return crow::response(400, res);
+        }
         
         if (dbManager.hasActiveRequest(userID)) {
             crow::json::wvalue res;
@@ -331,12 +383,18 @@ int main() {
         bool success = dbManager.updateJoinRequestStatus(rideID, userID, status);
         
         if (success && accept) {
+            // Ensure chat lead is set for this ride (in case it wasn't set before)
+            Ride ride = dbManager.getRideByID(rideID);
+            if (!ride.ownerID.empty()) {
+                chatFeature->SetRideLead(rideID, ride.ownerID);
+            }
+            
             auto rides = dbManager.getAllRides();
-            for (const auto& ride : rides) {
-                if (ride.rideID == rideID) {
-                    int newCapacity = ride.currentCapacity + 1;
+            for (const auto& rideItem : rides) {
+                if (rideItem.rideID == rideID) {
+                    int newCapacity = rideItem.currentCapacity + 1;
                     dbManager.updateRideCapacityByID(rideID, newCapacity);
-                    if (newCapacity >= ride.maxCapacity) {
+                    if (newCapacity >= rideItem.maxCapacity) {
                         dbManager.updateRideStatus(rideID, "full");
                     }
                     break;
@@ -378,6 +436,15 @@ int main() {
         std::string recipient = data["recipient"].s();
         std::string text = data["text"].s();
         int rideID = data["rideID"].i();
+
+        // Check if ride is completed - disable chat
+        Ride ride = dbManager.getRideByID(rideID);
+        if (ride.status == RideStatus::COMPLETED) {
+            crow::json::wvalue res;
+            res["success"] = false;
+            res["error"] = "Cannot send messages for a completed ride";
+            return crow::response(400, res);
+        }
 
         dbManager.insertMessage(sender, text);
 
@@ -438,6 +505,148 @@ int main() {
         }
         
         return crow::response(res);
+    });
+
+    // GET RIDE PARTICIPANTS (lead + accepted passengers) for chat
+    CROW_ROUTE(app, "/ride/<int>/participants").methods("GET"_method)
+    ([&](int rideID) {
+        Ride ride = dbManager.getRideByID(rideID);
+        auto passengers = dbManager.getAcceptedPassengers(rideID);
+        crow::json::wvalue res;
+        res["participants"] = crow::json::wvalue::list();
+        
+        // Add ride lead
+        if (!ride.ownerID.empty()) {
+            User leadUser = dbManager.getUserByID(ride.ownerID);
+            res["participants"][0]["userID"] = ride.ownerID;
+            res["participants"][0]["userName"] = leadUser.name;
+            res["participants"][0]["isLead"] = true;
+        }
+        
+        // Add accepted passengers
+        for (size_t i = 0; i < passengers.size(); ++i) {
+            res["participants"][i + 1]["userID"] = passengers[i].first;
+            res["participants"][i + 1]["userName"] = passengers[i].second;
+            res["participants"][i + 1]["isLead"] = false;
+        }
+        
+        return crow::response(res);
+    });
+
+    // START RIDE (only for lead)
+    CROW_ROUTE(app, "/ride/<int>/start").methods("POST"_method)
+    ([&](const crow::request &req, crow::response &res, int rideID) {
+        auto data = crow::json::load(req.body);
+        if (!data) {
+            res.code = 400;
+            res.body = "Invalid JSON";
+            res.end();
+            return;
+        }
+
+        std::string userID = data["userID"].s();
+        Ride ride = dbManager.getRideByID(rideID);
+        
+        if (ride.rideID == 0) {
+            crow::json::wvalue result;
+            result["success"] = false;
+            result["error"] = "Ride not found";
+            res.code = 404;
+            res.body = result.dump();
+            res.end();
+            return;
+        }
+        
+        if (ride.ownerID != userID) {
+            crow::json::wvalue result;
+            result["success"] = false;
+            result["error"] = "Only the ride lead can start the ride";
+            res.code = 403;
+            res.body = result.dump();
+            res.end();
+            return;
+        }
+        
+        if (ride.status == RideStatus::STARTED) {
+            crow::json::wvalue result;
+            result["success"] = false;
+            result["error"] = "Ride is already started";
+            res.code = 400;
+            res.body = result.dump();
+            res.end();
+            return;
+        }
+        
+        if (ride.status == RideStatus::COMPLETED) {
+            crow::json::wvalue result;
+            result["success"] = false;
+            result["error"] = "Cannot start a completed ride";
+            res.code = 400;
+            res.body = result.dump();
+            res.end();
+            return;
+        }
+        
+        bool success = dbManager.updateRideStatus(rideID, "started");
+        
+        crow::json::wvalue result;
+        result["success"] = success;
+        result["message"] = success ? "Ride started successfully" : "Failed to start ride";
+        res.body = result.dump();
+        res.end();
+    });
+
+    // END RIDE (only for lead)
+    CROW_ROUTE(app, "/ride/<int>/end").methods("POST"_method)
+    ([&](const crow::request &req, crow::response &res, int rideID) {
+        auto data = crow::json::load(req.body);
+        if (!data) {
+            res.code = 400;
+            res.body = "Invalid JSON";
+            res.end();
+            return;
+        }
+
+        std::string userID = data["userID"].s();
+        Ride ride = dbManager.getRideByID(rideID);
+        
+        if (ride.rideID == 0) {
+            crow::json::wvalue result;
+            result["success"] = false;
+            result["error"] = "Ride not found";
+            res.code = 404;
+            res.body = result.dump();
+            res.end();
+            return;
+        }
+        
+        if (ride.ownerID != userID) {
+            crow::json::wvalue result;
+            result["success"] = false;
+            result["error"] = "Only the ride lead can end the ride";
+            res.code = 403;
+            res.body = result.dump();
+            res.end();
+            return;
+        }
+        
+        if (ride.status == RideStatus::COMPLETED) {
+            crow::json::wvalue result;
+            result["success"] = false;
+            result["error"] = "Ride is already completed";
+            res.code = 400;
+            res.body = result.dump();
+            res.end();
+            return;
+        }
+        
+        bool success = dbManager.updateRideStatus(rideID, "completed");
+        
+        crow::json::wvalue result;
+        result["success"] = success;
+        result["message"] = success ? "Ride ended successfully" : "Failed to end ride";
+        res.body = result.dump();
+        res.end();
     });
 
     app.port(8080).multithreaded().run();

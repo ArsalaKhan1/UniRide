@@ -69,6 +69,12 @@ export const rideAPI = {
   async respondToRequest(payload: any) {
     return api.post('/ride/respond', payload)
   },
+  async startRide(rideID: number, userID: string) {
+    return api.post(`/ride/${rideID}/start`, { userID })
+  },
+  async endRide(rideID: number, userID: string) {
+    return api.post(`/ride/${rideID}/end`, { userID })
+  },
 }
 
 export const requestAPI = {
