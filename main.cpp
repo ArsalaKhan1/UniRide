@@ -101,6 +101,7 @@ int main() {
         res["user"]["id"] = user.userID;
         res["user"]["name"] = user.name;
         res["user"]["email"] = user.email;
+        res["user"]["gender"] = user.gender;
         res["sessionToken"] = sessionToken;
         res["expiresIn"] = 86400;
 

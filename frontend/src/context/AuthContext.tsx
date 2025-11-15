@@ -6,6 +6,7 @@ type User = {
   name: string
   email: string
   token?: string
+  gender?: string
 }
 
 type AuthContextType = {
@@ -43,6 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           name: data.user?.name || data.user?.username || '',
           email: data.user?.email || '',
           token: data.sessionToken || data.token,
+          gender: data.user?.gender || undefined,
         }
         setUser(u)
       } else {

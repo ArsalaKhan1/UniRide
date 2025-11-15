@@ -165,9 +165,12 @@ export default function RideRequestForm() {
             </select>
           </div>
         </div>
-        <div className="mt-4">
-          <label className="inline-flex items-center text-gray-800"><input type="checkbox" checked={femalesOnly} onChange={e => setFemalesOnly(e.target.checked)} className="mr-2" />Females only</label>
-        </div>
+        {/* Hide females-only option for explicitly male users */}
+        {((user?.gender || '').toLowerCase() !== 'male') && (
+          <div className="mt-4">
+            <label className="inline-flex items-center text-gray-800"><input type="checkbox" checked={femalesOnly} onChange={e => setFemalesOnly(e.target.checked)} className="mr-2" />Females only</label>
+          </div>
+        )}
         <div className="mt-4">
           <label className="block text-sm text-gray-700 mb-1">Preferred Vehicle Types</label>
           <div className="flex flex-wrap gap-4">

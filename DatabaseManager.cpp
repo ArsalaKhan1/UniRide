@@ -92,7 +92,8 @@ bool DatabaseManager::initialize() {
     const char* createStudentsTable = R"(
         CREATE TABLE IF NOT EXISTS students (
             enrollment_id TEXT PRIMARY KEY,
-            email_pattern TEXT
+            email_pattern TEXT,
+            gender TEXT
         );
     )";
 
@@ -140,14 +141,21 @@ bool DatabaseManager::initialize() {
         }
     }
 
-    // Populate mock students table
+    // Ensure students table has gender column (no-op if already present)
+    sqlite3_exec(db, "ALTER TABLE students ADD COLUMN gender TEXT;", 0, 0, &errMsg);
+    if (errMsg) {
+        sqlite3_free(errMsg);
+        errMsg = 0;
+    }
+
+    // Populate mock students table (now includes gender)
     const char* inserts[] = {
-        "INSERT OR IGNORE INTO students VALUES('NED/0393/2024', 'khan4735002@cloud.neduet.edu.pk');",
-        "INSERT OR IGNORE INTO students VALUES('NED/0887/2024', 'soomro4720844@cloud.neduet.edu.pk');",
-        "INSERT OR IGNORE INTO students VALUES('NED/1915/2024', 'rafique4735048@cloud.neduet.edu.pk');",
-        "INSERT OR IGNORE INTO students VALUES('NED/0636/2024', 'zaman4705230@cloud.neduet.edu.pk');",
-        "INSERT OR IGNORE INTO students VALUES('NED/0556/2024', 'rashid4705806@cloud.neduet.edu.pk');",
-        "INSERT OR IGNORE INTO students VALUES('NED/0770/2024', 'abrar4705198@cloud.neduet.edu.pk');"
+        "INSERT OR IGNORE INTO students VALUES('NED/0393/2024', 'khan4735002@cloud.neduet.edu.pk', 'male');",
+        "INSERT OR IGNORE INTO students VALUES('NED/0887/2024', 'soomro4720844@cloud.neduet.edu.pk', 'female');",
+        "INSERT OR IGNORE INTO students VALUES('NED/1915/2024', 'rafique4735048@cloud.neduet.edu.pk', 'female');",
+        "INSERT OR IGNORE INTO students VALUES('NED/0636/2024', 'zaman4705230@cloud.neduet.edu.pk', 'male');",
+        "INSERT OR IGNORE INTO students VALUES('NED/0556/2024', 'rashid4705806@cloud.neduet.edu.pk', 'male');",
+        "INSERT OR IGNORE INTO students VALUES('NED/0770/2024', 'abrar4705198@cloud.neduet.edu.pk', 'female');"
     };
 
     for (auto sql : inserts) {
@@ -162,20 +170,36 @@ bool DatabaseManager::initialize() {
 }
 
 bool DatabaseManager::insertUser(const User& user) {
+    // Try to fetch gender from students table using enrollment_id if provided
+    std::string genderToInsert = user.gender;
+    if (!user.enrollment_id.empty()) {
+        const char* q = "SELECT gender FROM students WHERE enrollment_id = ?;";
+        sqlite3_stmt* qstmt = nullptr;
+        int qrc = sqlite3_prepare_v2(db, q, -1, &qstmt, NULL);
+        if (qrc == SQLITE_OK) {
+            sqlite3_bind_text(qstmt, 1, user.enrollment_id.c_str(), -1, SQLITE_STATIC);
+            if (sqlite3_step(qstmt) == SQLITE_ROW) {
+                const unsigned char* gptr = sqlite3_column_text(qstmt, 0);
+                if (gptr) genderToInsert = reinterpret_cast<const char*>(gptr);
+            }
+        }
+        if (qstmt) sqlite3_finalize(qstmt);
+    }
+
     const char* sql = "INSERT OR REPLACE INTO users (userID, name, email, gender) VALUES (?, ?, ?, ?);";
-    sqlite3_stmt* stmt;
-    
+    sqlite3_stmt* stmt = nullptr;
+
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK) return false;
 
     sqlite3_bind_text(stmt, 1, user.userID.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, user.name.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 3, user.email.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 4, user.gender.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 4, genderToInsert.c_str(), -1, SQLITE_STATIC);
 
     rc = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
-    
+
     return rc == SQLITE_DONE;
 }
 
@@ -347,10 +371,18 @@ std::vector<Ride> DatabaseManager::findRideMatches(const std::string& from, cons
         if (locationGraph && !locationGraph->areConnected(from, ride.from)) continue;
         if (locationGraph && !locationGraph->areConnected(to, ride.to)) continue;
         
-        // Filter out females-only rides for non-females
-        if (ride.femalesOnly && !userID.empty()) {
-            User user = getUserByID(userID);
-            if (user.gender != "female") {
+        // Enforce females-only visibility rules:
+        // If the ride is marked females-only, only show it to users whose recorded gender is 'female'.
+        // Male users and unknown users should not see females-only rides.
+        if (ride.femalesOnly) {
+            if (!userID.empty()) {
+                User user = getUserByID(userID);
+                // Only allow if the user's recorded gender is female
+                if (user.gender != "female") {
+                    continue;
+                }
+            } else {
+                // Unknown user — do not expose females-only rides
                 continue;
             }
         }
@@ -529,6 +561,21 @@ std::vector<Ride> DatabaseManager::findMatchingRides(const std::string& from, co
         // Check proximity using LocationGraph
         if (locationGraph && !locationGraph->areConnected(from, ride.from)) continue;
         if (locationGraph && !locationGraph->areConnected(to, ride.to)) continue;
+        
+        // Enforce females-only visibility rules:
+        // If the ride is marked females-only, only show it to female users.
+        if (ride.femalesOnly) {
+            if (!userID.empty()) {
+                User user = getUserByID(userID);
+                // Only allow if the user's recorded gender is female
+                if (user.gender != "female") {
+                    continue;
+                }
+            } else {
+                // Unknown user — do not expose females-only rides
+                continue;
+            }
+        }
         
         matches.push_back(ride);
     }
