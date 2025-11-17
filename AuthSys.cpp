@@ -76,7 +76,7 @@ User AuthSystem::handleGoogleAuth(const std::string& idToken, const std::string&
     User newUser(sub, name, email);
     newUser.enrollment_id = enrollmentId;
     if (dbManager->insertUser(newUser)) {
-        return newUser;
+        return dbManager->getUserByEmail(email);
     }
     
     return User();

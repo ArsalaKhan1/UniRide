@@ -96,12 +96,16 @@ int main() {
 
         std::string sessionToken = authSystem.storeSessionToken(user.userID);
 
+        // DEBUG: Log what we're sending
+        std::cout << "DEBUG: Auth response - userID: " << user.userID << ", gender: '" << user.gender << "'" << std::endl;
+        
         crow::json::wvalue res;
         res["success"] = true;
         res["user"]["id"] = user.userID;
         res["user"]["name"] = user.name;
         res["user"]["email"] = user.email;
         res["user"]["gender"] = user.gender;
+        res["user"]["canSeeFemalesOnly"] = (user.gender == "female");
         res["sessionToken"] = sessionToken;
         res["expiresIn"] = 86400;
 
@@ -274,8 +278,25 @@ int main() {
         }
 
         RideType rideType = stringToRideType(data["rideType"].s());
+        
+        // Extract femalesOnly from request
+        bool femalesOnly = data.has("femalesOnly") ? data["femalesOnly"].b() : false;
+        
         User user = dbManager.getUserByID(userID);
-        auto matches = dbManager.findMatchingRides(data["from"].s(), data["to"].s(), rideType, userID, user.gender);
+        
+        // DEBUG: Log request details
+        std::cout << "DEBUG: Request - userID: " << userID << ", femalesOnly: " << femalesOnly 
+                  << ", user.gender: '" << user.gender << "'" << std::endl;
+        
+        // Pass femalesOnly to findMatchingRides
+        auto matches = dbManager.findMatchingRides(
+            data["from"].s(), 
+            data["to"].s(), 
+            rideType, 
+            userID, 
+            user.gender,
+            femalesOnly
+        );
         
         crow::json::wvalue res;
         res["rideType"] = rideTypeToString(rideType);
@@ -289,11 +310,8 @@ int main() {
                 res["matches"][i]["rideID"] = matches[i].rideID;
                 res["matches"][i]["leadUserID"] = matches[i].ownerID;
                 res["matches"][i]["leadUserName"] = leadUser.name;
-                // Add a display string that includes username, ride type, and available seats
-                {
-                    std::string display = leadUser.name + " - " + rideTypeToString(matches[i].rideType) + " - " + std::to_string(matches[i].getAvailableSlots()) + " seats";
-                    res["matches"][i]["leadDisplay"] = display;
-                }
+                std::string display = leadUser.name + " - " + rideTypeToString(matches[i].rideType) + " - " + std::to_string(matches[i].getAvailableSlots()) + " seats";
+                res["matches"][i]["leadDisplay"] = display;
                 res["matches"][i]["from"] = matches[i].from;
                 res["matches"][i]["to"] = matches[i].to;
                 res["matches"][i]["time"] = matches[i].time;
@@ -301,14 +319,28 @@ int main() {
                 res["matches"][i]["availableSlots"] = matches[i].getAvailableSlots();
             }
         } else {
-            // Always record the user's request
-            dbManager.insertRequest(data["userID"].s(), data["from"].s(), data["to"].s(), rideType);
+            // Pass femalesOnly when recording request
+            dbManager.insertRequest(
+                data["userID"].s(), 
+                data["from"].s(), 
+                data["to"].s(), 
+                rideType, 
+                femalesOnly
+            );
 
-            // If this call is only a search (frontend sets searchOnly=true), do NOT auto-create a ride.
             bool isSearchOnly = data.has("searchOnly") ? (data["searchOnly"].b()) : false;
 
             if (!isSearchOnly) {
-                Ride newRide(data["userID"].s(), data["from"].s(), data["to"].s(), "now", "request", rideType, false);
+                // Create ride with femalesOnly preference
+                Ride newRide(
+                    data["userID"].s(), 
+                    data["from"].s(), 
+                    data["to"].s(), 
+                    "now", 
+                    "request", 
+                    rideType, 
+                    femalesOnly
+                );
                 int rideID = dbManager.insertRide(newRide);
                 if (rideID != -1) {
                     chatFeature->SetRideLead(rideID, data["userID"].s());
@@ -321,7 +353,6 @@ int main() {
                 res["leadUserName"] = leadUser.name;
                 res["matches"] = crow::json::wvalue::list();
             } else {
-                // Search-only: inform caller that no matches were found and do not create rides
                 res["message"] = "No matching requests found";
                 res["matches"] = crow::json::wvalue::list();
             }
@@ -464,6 +495,17 @@ int main() {
     });
 
     // GET ACCEPTED REQUESTS FOR USER (for notifications)
+    // DEBUG: Check user gender
+    CROW_ROUTE(app, "/user/<string>/gender").methods("GET"_method)
+    ([&](const std::string& userID) {
+        User user = dbManager.getUserByID(userID);
+        crow::json::wvalue res;
+        res["userID"] = userID;
+        res["gender"] = user.gender;
+        res["canSeeFemalesOnly"] = (user.gender == "female");
+        return crow::response(res);
+    });
+
     CROW_ROUTE(app, "/user/<string>/accepted-requests").methods("GET"_method)
     ([&](const std::string& userID) {
         auto accepted = dbManager.getAcceptedRequestsForUser(userID);

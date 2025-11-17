@@ -61,8 +61,8 @@ export default function RideForm() {
         </select>
       </div>
 
-      {/* Hide females-only option for explicitly male users */}
-      {((user?.gender || '').toLowerCase() !== 'male') && (
+      {/* Show females-only option only for female users */}
+      {((user?.gender || '').toLowerCase() === 'female') && (
         <div>
           <label className="inline-flex items-center">
             <input type="checkbox" checked={femalesOnly} onChange={(e) => setFemalesOnly(e.target.checked)} />

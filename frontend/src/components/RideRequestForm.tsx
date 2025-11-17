@@ -96,8 +96,8 @@ export default function RideRequestForm() {
         const available = ride.availableSlots ?? 0
         if (available <= 0) return false
         
-        // Females-only filter (backend already handles this, but double-check)
-        if (femalesOnly && !ride.femalesOnly) return false
+        // Backend already handles females-only filtering correctly
+        // No additional filtering needed here
         
         return true
       })
@@ -165,8 +165,8 @@ export default function RideRequestForm() {
             </select>
           </div>
         </div>
-        {/* Hide females-only option for explicitly male users */}
-        {((user?.gender || '').toLowerCase() !== 'male') && (
+        {/* Show females-only option only for female users */}
+        {((user?.gender || '').toLowerCase() === 'female') && (
           <div className="mt-4">
             <label className="inline-flex items-center text-gray-800"><input type="checkbox" checked={femalesOnly} onChange={e => setFemalesOnly(e.target.checked)} className="mr-2" />Females only</label>
           </div>

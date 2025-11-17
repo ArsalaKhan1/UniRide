@@ -35,7 +35,7 @@ public:
     bool updateRideCapacity(const std::string& userID, const std::string& from, const std::string& to, int newCapacity);
     
     // Request operations
-    bool insertRequest(const std::string& userID, const std::string& from, const std::string& to, RideType rideType);
+    bool insertRequest(const std::string& userID, const std::string& from, const std::string& to, RideType rideType, bool femalesOnly = false);
     bool updateRequestStatus(int requestID, const std::string& status);
     
     // Message operations
@@ -49,7 +49,8 @@ public:
     // Enhanced ride operations
     std::vector<Ride> findMatchingRides(const std::string& from, const std::string& to, 
                                        RideType rideType, const std::string& userID, 
-                                       const std::string& genderPref = "any");
+                                       const std::string& genderPref = "any",
+                                       bool searcherWantsFemalesOnly = false);
     bool insertJoinRequest(int rideID, const std::string& userID);
     bool updateJoinRequestStatus(int rideID, const std::string& userID, const std::string& status);
     bool updateRideStatus(int rideID, const std::string& status);

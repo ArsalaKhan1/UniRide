@@ -71,11 +71,14 @@ bool DatabaseManager::initialize() {
             from_location TEXT NOT NULL,
             to_location TEXT NOT NULL,
             ride_type INTEGER NOT NULL,
+            females_only INTEGER DEFAULT 0,  -- ADD THIS LINE
             status TEXT DEFAULT 'pending',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(userID) REFERENCES users(userID)
         );
     )";
+
+    
 
     // Create chat messages table
     const char* createMessagesTable = R"(
@@ -397,8 +400,8 @@ std::vector<Ride> DatabaseManager::findRideMatches(const std::string& from, cons
     return matches;
 }
 
-bool DatabaseManager::insertRequest(const std::string& userID, const std::string& from, const std::string& to, RideType rideType) {
-    const char* sql = "INSERT INTO requests (userID, from_location, to_location, ride_type) VALUES (?, ?, ?, ?);";
+bool DatabaseManager::insertRequest(const std::string& userID, const std::string& from, const std::string& to, RideType rideType, bool femalesOnly) {
+    const char* sql = "INSERT INTO requests (userID, from_location, to_location, ride_type, females_only) VALUES (?, ?, ?, ?, ?);";
     sqlite3_stmt* stmt;
     
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -408,6 +411,7 @@ bool DatabaseManager::insertRequest(const std::string& userID, const std::string
     sqlite3_bind_text(stmt, 2, from.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 3, to.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 4, static_cast<int>(rideType));
+    sqlite3_bind_int(stmt, 5, femalesOnly ? 1 : 0);
 
     rc = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
@@ -522,16 +526,24 @@ bool DatabaseManager::getUserPreferences(const std::string& userID, std::string&
     return false;
 }
 
-std::vector<Ride> DatabaseManager::findMatchingRides(const std::string& from, const std::string& to, 
-                                                    RideType rideType, const std::string& userID, 
-                                                    const std::string& genderPref) {
+std::vector<Ride> DatabaseManager::findMatchingRides(
+    const std::string& from, 
+    const std::string& to, 
+    RideType rideType, 
+    const std::string& userID, 
+    const std::string& genderPref,
+    bool searcherWantsFemalesOnly) {
+    
     std::vector<Ride> matches;
     const char* sql = R"(
         SELECT id, owner_id, from_location, to_location, time, mode, ride_type, 
                current_capacity, max_capacity, females_only, gender_preference, ride_status
         FROM rides 
-        WHERE ride_type = ? AND ride_status = 'open' AND current_capacity < max_capacity
-              AND (gender_preference = 'any' OR gender_preference = ?)
+        WHERE ride_type = ? 
+          AND ride_status = 'open' 
+          AND current_capacity < max_capacity
+          AND owner_id != ?
+          AND (gender_preference = 'any' OR gender_preference = ?)
     )";
     sqlite3_stmt* stmt;
 
@@ -539,7 +551,8 @@ std::vector<Ride> DatabaseManager::findMatchingRides(const std::string& from, co
     if (rc != SQLITE_OK) return matches;
 
     sqlite3_bind_int(stmt, 1, static_cast<int>(rideType));
-    sqlite3_bind_text(stmt, 2, genderPref.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, userID.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, genderPref.c_str(), -1, SQLITE_STATIC);
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         Ride ride;
@@ -562,20 +575,39 @@ std::vector<Ride> DatabaseManager::findMatchingRides(const std::string& from, co
         if (locationGraph && !locationGraph->areConnected(from, ride.from)) continue;
         if (locationGraph && !locationGraph->areConnected(to, ride.to)) continue;
         
-        // Enforce females-only visibility rules:
-        // If the ride is marked females-only, only show it to female users.
-        if (ride.femalesOnly) {
-            if (!userID.empty()) {
-                User user = getUserByID(userID);
-                // Only allow if the user's recorded gender is female
-                if (user.gender != "female") {
-                    continue;
-                }
-            } else {
-                // Unknown user — do not expose females-only rides
+        // Get user info for gender checks
+        User user = getUserByID(userID);
+        std::string userGender = user.gender;
+        
+        // DEBUG: Log ride and user info
+        std::cout << "DEBUG: Ride ID " << ride.rideID << ", femalesOnly: " << ride.femalesOnly 
+                  << ", userGender: '" << userGender << "', searcherWantsFemalesOnly: " << searcherWantsFemalesOnly << std::endl;
+        
+        // ===== CORRECTED FILTERING LOGIC =====
+        
+        // RULE 1: Males can NEVER see females-only rides
+        if (ride.femalesOnly && userGender == "male") {
+            std::cout << "DEBUG: Skipping ride " << ride.rideID << " - RULE 1: Male user cannot see females-only ride" << std::endl;
+            continue; // Skip this ride
+        }
+        
+        // RULE 2: If female user wants ONLY females-only rides
+        if (userGender == "female" && searcherWantsFemalesOnly) {
+            // Only show females-only rides
+            if (!ride.femalesOnly) {
+                std::cout << "DEBUG: Skipping ride " << ride.rideID << " - RULE 2: Female wants females-only but ride is not females-only" << std::endl;
                 continue;
             }
         }
+        
+        // RULE 3: If female user does NOT want females-only specifically, show ALL rides
+        // RULE 4: Non-female users (except males) see only regular rides
+        if (ride.femalesOnly && userGender != "female") {
+            std::cout << "DEBUG: Skipping ride " << ride.rideID << " - RULE 4: Non-female user cannot see females-only ride" << std::endl;
+            continue;
+        }
+        
+        std::cout << "DEBUG: Including ride " << ride.rideID << " in matches" << std::endl;
         
         matches.push_back(ride);
     }
