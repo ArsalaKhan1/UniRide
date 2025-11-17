@@ -18,7 +18,7 @@ export default function ChatPage() {
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
   const [rideLeadID, setRideLeadID] = useState<string | null>(null)
-  const [userNames, setUserNames] = useState<Record<string,string>>({})
+  const [userNames, setUserNames] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
   const [rideStatus, setRideStatus] = useState<string>('open')
 
@@ -33,14 +33,14 @@ export default function ChatPage() {
           setRideLeadID(ride.leadUserID || ride.ownerID)
           setRideStatus(ride.status || 'open')
           // prime user name map with lead and current user
-          setUserNames(prev => ({...prev, [ride.leadUserID || ride.ownerID]: ride.leadUserName || '' , [String(user?.id || '')]: user?.name || ''}))
+          setUserNames(prev => ({ ...prev, [ride.leadUserID || ride.ownerID]: ride.leadUserName || '', [String(user?.id || '')]: user?.name || '' }))
           // fetch accepted passengers to get their names
           try {
             const acc = await rideAPI.getAcceptedPassengers(Number(rideId))
             const accepted = acc.data.accepted || []
-            const mapUpdate: Record<string,string> = {}
-            accepted.forEach((p:any) => { mapUpdate[String(p.userID)] = p.userName })
-            setUserNames(prev => ({...prev, ...mapUpdate}))
+            const mapUpdate: Record<string, string> = {}
+            accepted.forEach((p: any) => { mapUpdate[String(p.userID)] = p.userName })
+            setUserNames(prev => ({ ...prev, ...mapUpdate }))
           } catch (e) {
             // ignore
           }
@@ -48,9 +48,9 @@ export default function ChatPage() {
           try {
             const pending = await rideAPI.getRideRequests(Number(rideId))
             const requests = pending.data.requests || []
-            const mapUpdate: Record<string,string> = {}
-            requests.forEach((req:any) => { mapUpdate[String(req.userID)] = req.userName || req.userID })
-            setUserNames(prev => ({...prev, ...mapUpdate}))
+            const mapUpdate: Record<string, string> = {}
+            requests.forEach((req: any) => { mapUpdate[String(req.userID)] = req.userName || req.userID })
+            setUserNames(prev => ({ ...prev, ...mapUpdate }))
           } catch (e) {
             // ignore
           }
@@ -81,9 +81,9 @@ export default function ChatPage() {
       try {
         const acc = await rideAPI.getAcceptedPassengers(Number(rideId))
         const accepted = acc.data.accepted || []
-        const mapUpdate: Record<string,string> = {}
-        accepted.forEach((p:any) => { mapUpdate[String(p.userID)] = p.userName })
-        setUserNames(prev => ({...prev, ...mapUpdate}))
+        const mapUpdate: Record<string, string> = {}
+        accepted.forEach((p: any) => { mapUpdate[String(p.userID)] = p.userName })
+        setUserNames(prev => ({ ...prev, ...mapUpdate }))
       } catch (e) {
         // ignore
       }
@@ -91,9 +91,9 @@ export default function ChatPage() {
       try {
         const pending = await rideAPI.getRideRequests(Number(rideId))
         const requests = pending.data.requests || []
-        const mapUpdate: Record<string,string> = {}
-        requests.forEach((req:any) => { mapUpdate[String(req.userID)] = req.userName || req.userID })
-        setUserNames(prev => ({...prev, ...mapUpdate}))
+        const mapUpdate: Record<string, string> = {}
+        requests.forEach((req: any) => { mapUpdate[String(req.userID)] = req.userName || req.userID })
+        setUserNames(prev => ({ ...prev, ...mapUpdate }))
       } catch (e) {
         // ignore
       }
@@ -113,7 +113,7 @@ export default function ChatPage() {
           if (ride) {
             setRideStatus(ride.status || 'open')
           }
-        }).catch(() => {})
+        }).catch(() => { })
       }
     }, 5000)
     return () => clearInterval(id)
@@ -144,14 +144,14 @@ export default function ChatPage() {
     try {
       // Hub-and-spoke model: if user is lead, send with empty recipient (broadcast)
       // If user is passenger, send to lead
-  const recipient = currentUserId === (rideLeadID || '') ? '' : rideLeadID
-      const res = await chatAPI.send({ 
-        sender: user.id, 
-        recipient: recipient, 
-        text: text.trim(), 
-        rideID: Number(rideId) 
+      const recipient = currentUserId === (rideLeadID || '') ? '' : rideLeadID
+      const res = await chatAPI.send({
+        sender: user.id,
+        recipient: recipient,
+        text: text.trim(),
+        rideID: Number(rideId)
       })
-      
+
       if (res.data.success) {
         setText('')
         fetch()
@@ -172,30 +172,30 @@ export default function ChatPage() {
   const isCompleted = rideStatus === 'completed'
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4 text-gray-900">Chat for Ride #{rideId}</h2>
+    <div className="max-w-4xl mx-auto p-10">
+      <h2 className="text-2xl font-bold mb-6 text-gray-900">Chat for Ride #{rideId}</h2>
       {isCompleted && (
-        <div className="mb-4 p-4 bg-gray-100 border border-gray-300 rounded-lg">
+        <div className="mb-6 p-6 bg-blue-100 border-2 border-blue-300 rounded-3xl">
           <p className="text-gray-700 font-semibold">This ride has been completed. Chat is disabled.</p>
         </div>
       )}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="mb-4 h-96 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
+      <div className="bg-blue-100 rounded-2xl shadow-xl p-8 border-2 border-blue-200">
+        <div className="mb-6 h-96 overflow-y-auto border-2 border-blue-200 rounded-2xl p-6 bg-white">
           {messages.length === 0 ? (
             <div className="text-gray-500 text-center py-8">No messages yet. Start the conversation!</div>
           ) : (
             messages.map((m, i) => {
               const isOwnMessage = m.sender === currentUserId
               const senderName = isOwnMessage ? 'You' : (userNames[m.sender] || m.sender)
-              // Align own messages to the left as requested; recipient messages also left-aligned
               return (
-                <div key={i} className="mb-4 flex flex-col items-start">
+                <div key={i} className={`mb-4 flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}>
                   <div className="flex items-center text-xs text-gray-600 mb-1">
-                    <span className="font-medium mr-2">{senderName}</span>  
+                    <span className="font-medium">{senderName}</span>
+                    <span className="mx-3"></span>
                     {m.timestamp && <span className="text-gray-500">{m.timestamp}</span>}
                   </div>
-                  <div className={`inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${isOwnMessage ? 'bg-blue-600' : 'bg-white border border-gray-300'}`}>
-                    <div className="text-gray-900">{m.text}</div>
+                  <div className={`inline-block max-w-xs lg:max-w-md px-4 py-2.5 rounded-lg ${isOwnMessage ? 'bg-white text-blue-600' : 'bg-white border border-gray-300'}`}>
+                    <div className={isOwnMessage ? 'text-blue-600' : 'text-gray-900'}>{m.text}</div>
                   </div>
                 </div>
               )
@@ -203,26 +203,26 @@ export default function ChatPage() {
           )}
         </div>
 
-        {error && <div className="mb-3 text-red-600 text-sm">{error}</div>}
+        {error && <div className="mb-4 text-red-600 text-sm bg-red-50 p-3 rounded-xl">{error}</div>}
 
         <form onSubmit={handleSend} className="flex gap-2">
-          <input 
-            value={text} 
+          <input
+            value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed" 
-            placeholder={isCompleted ? "Chat disabled - ride completed" : "Type a message..."} 
+            className="flex-1 border border-gray-300 rounded-lg px-6 py-4 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            placeholder={isCompleted ? "Chat disabled - ride completed" : "Type a message..."}
             disabled={loading || !rideLeadID || isCompleted}
           />
-          <button 
+          <button
             type="submit"
-            disabled={loading || !text.trim() || !rideLeadID || isCompleted} 
-            className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={loading || !text.trim() || !rideLeadID || isCompleted}
+            className="px-8 py-4 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-base font-medium"
           >
             {loading ? 'Sending...' : 'Send'}
           </button>
         </form>
       </div>
-    </div>
+    </div >
   )
 }

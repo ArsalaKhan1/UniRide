@@ -36,20 +36,21 @@ export default function NotificationBanner() {
   if (!acceptedRequests.length) return null
 
   return (
-    <div className="space-y-2 mb-4">
+    <div className="space-y-4 mb-6">
       {acceptedRequests.map((req) => (
-        <div key={req.rideID} className="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg shadow-sm">
+        <div key={req.rideID} className="bg-green-50 border-2 border-green-300 p-6 rounded-3xl shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-semibold text-green-800">Request Accepted!</div>
-              <div className="text-sm text-green-700 mt-1">
+              <div className="font-semibold text-green-800 text-lg">Request Accepted!</div>
+              <div className="text-sm text-green-700 mt-2">
                 Your request to join ride #{req.rideID} ({req.from} → {req.to}) has been accepted.
                 Waiting for others to join before the ride starts.
               </div>
             </div>
+
             <Link
               to={`/chat/${req.rideID}`}
-              className="ml-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              className="text-sm text-blue-700 underline font-medium"
             >
               Open Chat
             </Link>

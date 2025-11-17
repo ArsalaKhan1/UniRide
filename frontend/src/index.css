@@ -5,8 +5,8 @@ html, body, #root {
 body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   margin: 0;
-  background: #f3f4f6; /* gray-100 */
-  color: #111827; /* gray-900 */
+  background: #dbeafe; /* light blue instead of gray-100 */
+  color: #112b63; /* gray-900 */
 }
 
 .container {
@@ -17,7 +17,7 @@ body {
   padding-right: 1rem;
 }
 
-.text-primary { color: #4CAF50 }
+.text-primary { color: #4c91af }
 .bg-white { background: #ffffff }
 .rounded { border-radius: 0.5rem }
 .shadow { box-shadow: 0 1px 3px rgba(0,0,0,0.08) }
@@ -45,3 +45,103 @@ body {
 .space-y-3 > * + * { margin-top: .75rem }
 .list-decimal { list-style-type: decimal }
 .list-inside { list-style-position: inside }
+
+/* Enhanced rounded corners */
+.rounded-3xl {
+  border-radius: 1.5rem;
+}
+
+/* Light blue backgrounds */
+.bg-blue-50 {
+  background-color: #eff6ff;
+}
+
+.bg-blue-100 {
+  background-color: #dbeafe;
+}
+
+.bg-blue-200 {
+  background-color: #bfdbfe;
+}
+
+/* Border colors */
+.border-blue-200 {
+  border-color: #bfdbfe;
+}
+
+.border-blue-300 {
+  border-color: #93c5fd;
+}
+
+/* Text colors */
+.text-blue-600 {
+  color: #2563eb;
+}
+
+.text-blue-700 {
+  color: #1d4ed8;
+}
+
+/* Enhanced blue colors for buttons */
+.bg-blue-700 {
+  background-color: #1d4ed8;
+}
+
+.bg-blue-800 {
+  background-color: #1e40af;
+}
+
+.hover\:bg-blue-800:hover {
+  background-color: #1e40af;
+}
+
+/* Border radius */
+.rounded-2xl {
+  border-radius: 1rem;
+}
+
+/* Enhanced borders */
+.border-blue-300 {
+  border-color: #93c5fd;
+}
+
+.border-green-200 {
+  border-color: #7fd9de;
+}
+
+.border-green-300 {
+  border-color: #7fd9de;
+}
+
+.border-gray-200 {
+  border-color: #e5e7eb;
+}
+
+/* Background colors */
+.bg-green-50 {
+  background-color: #dbeafe;
+}
+
+.bg-red-50 {
+  background-color: #9fc3e7;
+}
+
+.bg-red-51 {
+  background-color: #365bc3;
+}
+
+.bg-green-100 {
+  background-color: #90ea74;
+}
+
+.bg-red-100 {
+  background-color: #ee6464;
+}
+
+.bg-green-600 {
+  background-color: #9291ce;
+}
+
+.bg-red-600 {
+  background-color: #9291ce;
+}

@@ -46,7 +46,8 @@ export default function RideOfferForm() {
   }
 
   return (
-    <form className="p-6 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto mt-8" onSubmit={offerRide}>
+     // <form className="p-6 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto mt-8" onSubmit={offerRide}>
+    <form className="p-10 bg-blue-100 rounded-3xl shadow-xl max-w-4xl mx-auto mt-8 border-2 border-blue-200" onSubmit={offerRide}>
       <h2 className="font-semibold text-2xl mb-4 text-gray-900">Offer a Ride</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -94,7 +95,7 @@ export default function RideOfferForm() {
         </select>
       </div>
       <div className="mt-6">
-        <button type="submit" disabled={loading} className="px-5 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60">{loading ? 'Posting…' : 'Post Ride Offer'}</button>
+        <button type="submit" disabled={loading} className="px-6 py-3 rounded-xl bg-blue-700 text-white hover:bg-blue-800 disabled:opacity-60 font-medium">{loading ? 'Posting…' : 'Post Ride Offer'}</button>
       </div>
       {successMsg && <div className="mt-3 text-green-700 font-medium">{successMsg}</div>}
     </form>
