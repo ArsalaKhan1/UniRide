@@ -179,8 +179,8 @@ export default function ChatPage() {
           <p className="text-gray-700 font-semibold">This ride has been completed. Chat is disabled.</p>
         </div>
       )}
-      <div className="bg-blue-100 rounded-2xl shadow-xl p-8 border-2 border-blue-200">
-        <div className="mb-6 h-96 overflow-y-auto border-2 border-blue-200 rounded-2xl p-6 bg-white">
+      <div className="bg-blue-100 shadow-xl p-8 border-2 border-blue-200">
+        <div className="mb-6 h-96 overflow-y-auto border-2 border-blue-200 p-6 bg-white">
           {messages.length === 0 ? (
             <div className="text-gray-500 text-center py-8">No messages yet. Start the conversation!</div>
           ) : (
@@ -191,11 +191,18 @@ export default function ChatPage() {
                 <div key={i} className={`mb-4 flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}>
                   <div className="flex items-center text-xs text-gray-600 mb-1">
                     <span className="font-medium">{senderName}</span>
-                    <span className="mx-3"></span>
-                    {m.timestamp && <span className="text-gray-500">{m.timestamp}</span>}
+                    {m.timestamp && (
+                      <>
+                        <span className="mx-1">&nbsp;&nbsp;&nbsp;</span>
+                        <span className="text-gray-500">{m.timestamp}</span>
+                      </>
+                    )}
                   </div>
-                  <div className={`inline-block max-w-xs lg:max-w-md px-4 py-2.5 rounded-lg ${isOwnMessage ? 'bg-white text-blue-600' : 'bg-white border border-gray-300'}`}>
-                    <div className={isOwnMessage ? 'text-blue-600' : 'text-gray-900'}>{m.text}</div>
+                  <div className={`inline-block max-w-xs lg:max-w-md px-5 py-3 rounded-2xl ${isOwnMessage
+                    ? 'bg-white text-gray-900'
+                    : 'bg-white border-2 border-gray-300 text-gray-900'
+                    }`}>
+                    {m.text}
                   </div>
                 </div>
               )
@@ -205,19 +212,21 @@ export default function ChatPage() {
 
         {error && <div className="mb-4 text-red-600 text-sm bg-red-50 p-3 rounded-xl">{error}</div>}
 
-        <form onSubmit={handleSend} className="flex gap-2">
+        <form onSubmit={handleSend} className="flex gap-3">
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            className="flex-1 border border-gray-300 rounded-lg px-6 py-4 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            style={{ height: "3rem" , width: "20rem" }}
+            className="flex-1 h-14 border-2 border-gray-300 rounded-2xl px-5  text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             placeholder={isCompleted ? "Chat disabled - ride completed" : "Type a message..."}
             disabled={loading || !rideLeadID || isCompleted}
           />
           <button
             type="submit"
             disabled={loading || !text.trim() || !rideLeadID || isCompleted}
-            className="px-8 py-4 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-base font-medium"
+            style={{ height: "3rem" , width: "5rem" }}
+            className="h-14 px-5 rounded-2xl bg-green-600 text-white hover:bg-blue-700 disabled:cursor-not-allowed text-base font-medium"
           >
             {loading ? 'Sending...' : 'Send'}
           </button>
