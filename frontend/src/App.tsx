@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Landing from './pages/Landing'
 import Dashboard from './pages/Dashboard'
 import ChatPage from './pages/ChatPage'
@@ -12,12 +12,14 @@ function PrivateRoute({ children }: { children: JSX.Element }) {
   return user ? children : <Navigate to="/" />
 }
 
-export default function App() {
+function AppContent() {
+  const location = useLocation()
+  const showNavbar = location.pathname !== '/'
+
   return (
-    <AuthProvider>
-      <div className="min-h-screen bg-gray-100">
-        <Navbar />
-        <div className="container mx-auto p-4">
+    <div className="min-h-screen bg-gray-100">
+      {showNavbar && <Navbar />}
+      <div className="container mx-auto p-4">
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/ride" element={
@@ -42,8 +44,15 @@ export default function App() {
               }
             />
           </Routes>
-        </div>
       </div>
+    </div>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
     </AuthProvider>
   )
 }

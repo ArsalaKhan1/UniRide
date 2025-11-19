@@ -46,39 +46,91 @@ export default function RideOfferForm() {
   }
 
   return (
-     // <form className="p-6 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto mt-8" onSubmit={offerRide}>
-    <form className="p-10 bg-blue-100 rounded-3xl shadow-xl max-w-4xl mx-auto mt-8 border-2 border-blue-200" onSubmit={offerRide}>
-      <h2 className="font-semibold text-2xl mb-4 text-gray-900">Offer a Ride</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form 
+      style={{
+        padding: '1rem',
+        backgroundColor: '#dbeafe',
+        borderRadius: '1rem',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        maxWidth: '700px',
+        margin: '0.5rem auto',
+        border: '2px solid #bfdbfe',
+        textAlign: 'center'
+      }} 
+      onSubmit={offerRide}
+    >
+      <h2 style={{ fontWeight: '600', fontSize: '1.25rem', marginBottom: '0.75rem', color: '#111827' }}>Offer a Ride</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
         <div>
-          <label className="block text-sm text-gray-700 mb-1">From</label>
-          <select value={from} onChange={e => handleFrom(e.target.value)} disabled={to !== '' && to !== 'NED University'} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <label style={{ display: 'block', fontSize: '0.875rem', color: '#374151', marginBottom: '0.25rem' }}>From</label>
+          <select 
+            value={from} 
+            onChange={e => handleFrom(e.target.value)} 
+            disabled={to !== '' && to !== 'NED University'} 
+            style={{ 
+              width: '100%', 
+              padding: '0.5rem', 
+              border: '1px solid #d1d5db', 
+              borderRadius: '0.5rem', 
+              fontSize: '0.875rem',
+              outline: 'none'
+            }}
+          >
             {locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-sm text-gray-700 mb-1">To</label>
-          <select value={to} onChange={e => handleTo(e.target.value)} disabled={from !== '' && from !== 'NED University'} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <label style={{ display: 'block', fontSize: '0.875rem', color: '#374151', marginBottom: '0.25rem' }}>To</label>
+          <select 
+            value={to} 
+            onChange={e => handleTo(e.target.value)} 
+            disabled={from !== '' && from !== 'NED University'} 
+            style={{ 
+              width: '100%', 
+              padding: '0.5rem', 
+              border: '1px solid #d1d5db', 
+              borderRadius: '0.5rem', 
+              fontSize: '0.875rem',
+              outline: 'none'
+            }}
+          >
             {locations.map(loc => loc !== from && <option key={loc} value={loc}>{loc}</option>)}
           </select>
         </div>
       </div>
-      {/* Show females-only option only for female users */}
       {((user?.gender || '').toLowerCase() === 'female') && (
-        <div className="mt-4">
-          <label className="inline-flex items-center text-gray-800"><input type="checkbox" checked={femalesOnly} onChange={e => setFemalesOnly(e.target.checked)} className="mr-2" />Females only ride</label>
+        <div style={{ marginTop: '0.75rem' }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', color: '#1f2937', fontSize: '0.875rem' }}>
+            <input type="checkbox" checked={femalesOnly} onChange={e => setFemalesOnly(e.target.checked)} style={{ marginRight: '0.5rem' }} />
+            Females only ride
+          </label>
         </div>
       )}
-      <div className="mt-4">
-        <label className="block text-sm text-gray-700 mb-1">Vehicle Type</label>
-        <div className="flex gap-6 text-gray-900">
-          <label className="inline-flex items-center"><input type="radio" name="rtype" value="carpool" checked={rideType==='carpool'} onChange={()=>setRideType('carpool')} className="mr-2"/> Car</label>
-          <label className="inline-flex items-center"><input type="radio" name="rtype" value="bike" checked={rideType==='bike'} onChange={()=>setRideType('bike')} className="mr-2"/> Bike</label>
+      <div style={{ marginTop: '0.75rem' }}>
+        <label style={{ display: 'block', fontSize: '0.875rem', color: '#374151', marginBottom: '0.25rem' }}>Vehicle Type</label>
+        <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', color: '#111827' }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', fontSize: '0.875rem' }}>
+            <input type="radio" name="rtype" value="carpool" checked={rideType==='carpool'} onChange={()=>setRideType('carpool')} style={{ marginRight: '0.5rem' }} /> Car
+          </label>
+          <label style={{ display: 'inline-flex', alignItems: 'center', fontSize: '0.875rem' }}>
+            <input type="radio" name="rtype" value="bike" checked={rideType==='bike'} onChange={()=>setRideType('bike')} style={{ marginRight: '0.5rem' }} /> Bike
+          </label>
         </div>
       </div>
-      <div className="mt-4">
-        <label className="block text-sm text-gray-700 mb-1">Seats Available</label>
-        <select value={seats} onChange={e => setSeats(Number(e.target.value))} className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      <div style={{ marginTop: '0.75rem' }}>
+        <label style={{ display: 'block', fontSize: '0.875rem', color: '#374151', marginBottom: '0.25rem' }}>Seats Available</label>
+        <select 
+          value={seats} 
+          onChange={e => setSeats(Number(e.target.value))} 
+          style={{ 
+            width: '8rem', 
+            padding: '0.5rem', 
+            border: '1px solid #d1d5db', 
+            borderRadius: '0.5rem', 
+            fontSize: '0.875rem',
+            outline: 'none'
+          }}
+        >
           {rideType === 'bike' ? (
             <>
               <option value={1}>1</option>
@@ -94,10 +146,26 @@ export default function RideOfferForm() {
           )}
         </select>
       </div>
-      <div className="mt-6">
-        <button type="submit" disabled={loading} className="px-6 py-3 rounded-xl bg-blue-700 text-white hover:bg-blue-800 disabled:opacity-60 font-medium">{loading ? 'Posting…' : 'Post Ride Offer'}</button>
+      <div style={{ marginTop: '0.75rem' }}>
+        <button 
+          type="submit" 
+          disabled={loading} 
+          style={{ 
+            padding: '0.5rem 1.25rem', 
+            borderRadius: '0.5rem', 
+            backgroundColor: '#1d4ed8', 
+            color: 'white', 
+            border: 'none',
+            fontWeight: '500', 
+            fontSize: '0.875rem',
+            cursor: 'pointer',
+            opacity: loading ? 0.6 : 1
+          }}
+        >
+          {loading ? 'Posting…' : 'Post Ride Offer'}
+        </button>
       </div>
-      {successMsg && <div className="mt-3 text-green-700 font-medium">{successMsg}</div>}
+      {successMsg && <div style={{ marginTop: '0.5rem', color: '#166534', fontWeight: '500', fontSize: '0.875rem' }}>{successMsg}</div>}
     </form>
   )
 }

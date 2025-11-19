@@ -158,7 +158,8 @@ bool DatabaseManager::initialize() {
         "INSERT OR IGNORE INTO students VALUES('NED/1915/2024', 'rafique4735048@cloud.neduet.edu.pk', 'female');",
         "INSERT OR IGNORE INTO students VALUES('NED/0636/2024', 'zaman4705230@cloud.neduet.edu.pk', 'male');",
         "INSERT OR IGNORE INTO students VALUES('NED/0556/2024', 'rashid4705806@cloud.neduet.edu.pk', 'male');",
-        "INSERT OR IGNORE INTO students VALUES('NED/0770/2024', 'abrar4705198@cloud.neduet.edu.pk', 'female');"
+        "INSERT OR IGNORE INTO students VALUES('NED/0770/2024', 'abrar4705198@cloud.neduet.edu.pk', 'female');",
+        "INSERT OR IGNORE INTO students VALUES('NED/0723/2023', 'zafar4601199@cloud.neduet.edu.pk', 'male');"
     };
 
     for (auto sql : inserts) {

@@ -6,19 +6,68 @@ export default function RideInteractionScreen() {
   const [choice, setChoice] = useState<null | 'offer' | 'request'>(null)
 
   if (!choice) return (
-    // <div className="max-w-2xl mx-auto p-8 bg-white rounded-2xl shadow-lg mt-8">
-    <div className="max-w-4xl mx-auto p-10 bg-blue-100 rounded-3xl shadow-xl mt-8 border-2 border-blue-200">
-      <h1 className="text-3xl font-bold mb-2 text-gray-900">Looking for a new ride?</h1>
-      <p className="mb-6 text-gray-600">Fill in a few details and preferences, and you’ll be finding one in no time!</p>
-      <div className="mb-6 font-medium text-lg text-gray-900">Are you a car/bike owner looking for a carpooling passenger?</div>
-      <div className="flex gap-4">
+    <div style={{
+      maxWidth: '800px',
+      margin: '2rem auto',
+      padding: '2.5rem',
+      backgroundColor: '#dbeafe',
+      borderRadius: '1.5rem',
+      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+      border: '2px solid #bfdbfe',
+      textAlign: 'center'
+    }}>
+      <h1 style={{
+        fontSize: '1.875rem',
+        fontWeight: 'bold',
+        marginBottom: '0.5rem',
+        color: '#111827'
+      }}>Looking for a new ride?</h1>
+      <p style={{
+        marginBottom: '1.5rem',
+        color: '#4b5563'
+      }}>Fill in a few details and preferences, and you'll be finding one in no time!</p>
+      <div style={{
+        marginBottom: '1.5rem',
+        fontWeight: '500',
+        fontSize: '1.125rem',
+        color: '#111827'
+      }}>Are you a car/bike owner looking for a carpooling passenger?</div>
+      <div style={{
+        display: 'flex',
+        gap: '1rem',
+        justifyContent: 'center'
+      }}>
         <button
-          className="px-8 py-3 bg-blue-700 text-white rounded-xl hover:bg-blue-800 font-medium"
+          style={{
+            padding: '1rem 2.5rem',
+            backgroundColor: '#1d4ed8',
+            color: 'white',
+            borderRadius: '0.75rem',
+            fontWeight: '500',
+            fontSize: '1.125rem',
+            border: 'none',
+            cursor: 'pointer',
+            minWidth: '120px'
+          }}
           onClick={() => setChoice('offer')}
+          onMouseOver={(e) => e.target.style.backgroundColor = '#1e40af'}
+          onMouseOut={(e) => e.target.style.backgroundColor = '#1d4ed8'}
         >Yes</button>
         <button
-          className="px-8 py-3 bg-white text-gray-900 rounded-xl hover:bg-gray-50 border-2 border-blue-200 font-medium"
+          style={{
+            padding: '1rem 2.5rem',
+            backgroundColor: 'white',
+            color: '#111827',
+            borderRadius: '0.75rem',
+            fontWeight: '500',
+            fontSize: '1.125rem',
+            border: '2px solid #bfdbfe',
+            cursor: 'pointer',
+            minWidth: '120px'
+          }}
           onClick={() => setChoice('request')}
+          onMouseOver={(e) => e.target.style.backgroundColor = '#f9fafb'}
+          onMouseOut={(e) => e.target.style.backgroundColor = 'white'}
         >No</button>
       </div>
     </div>

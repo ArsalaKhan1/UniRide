@@ -24,7 +24,7 @@ export default function RideRequestForm() {
   const [fallbackType, setFallbackType] = useState('')
 
   if (!user) {
-    return <div className="text-red-600 font-semibold">You must be signed in to request a ride.</div>;
+    return <div style={{ color: '#dc2626', fontWeight: '600', textAlign: 'center', fontSize: '1rem' }}>You must be signed in to request a ride.</div>;
   }
   const userID = user.id
 
@@ -55,25 +55,19 @@ export default function RideRequestForm() {
         return
       }
 
-      // Use backend's matching logic for EACH vehicle type
-      // This ensures we leverage the location graph proximity checking
       let allMatches: any[] = []
 
       for (const rideType of types) {
         try {
-          // Call backend's /request/create endpoint which uses findMatchingRides()
-          // This includes the location graph proximity logic
           const { data } = await requestAPI.create({
             userID: userID,
             from,
             to,
             rideType: rideType,
             femalesOnly,
-            // indicate this is a search-only call; do not auto-create rides on the backend
             searchOnly: true,
           })
 
-          // If matches are returned, add them to our list
           if (data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
             allMatches = [...allMatches, ...data.matches]
           }
@@ -82,23 +76,14 @@ export default function RideRequestForm() {
         }
       }
 
-      // Remove duplicates by rideID
       const uniqueMatches = allMatches.filter((ride, index, self) =>
         index === self.findIndex((r) => r.rideID === ride.rideID)
       )
 
-      // Additional client-side filtering for UI-specific requirements
       const filtered = uniqueMatches.filter((ride: any) => {
-        // Skip if user is the lead
         if (ride.leadUserID === userID) return false
-
-        // Check available slots
         const available = ride.availableSlots ?? 0
         if (available <= 0) return false
-
-        // Backend already handles females-only filtering correctly
-        // No additional filtering needed here
-
         return true
       })
 
@@ -148,83 +133,204 @@ export default function RideRequestForm() {
   }
 
   return (
-    // <div className="p-6 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto mt-8">
-    <div className="p-10 bg-blue-100 rounded-3xl shadow-xl max-w-4xl mx-auto mt-8 border-2 border-blue-200">
-      <h2 className="font-semibold text-2xl mb-4 text-gray-900">Request a Ride</h2>
-      <form onSubmit={searchRides} className="mb-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div style={{
+      padding: '1rem',
+      backgroundColor: '#dbeafe',
+      borderRadius: '1rem',
+      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+      maxWidth: '700px',
+      margin: '0.5rem auto',
+      border: '2px solid #bfdbfe',
+      textAlign: 'center'
+    }}>
+      <h2 style={{ fontWeight: '600', fontSize: '1.25rem', marginBottom: '0.75rem', color: '#111827' }}>Request a Ride</h2>
+      <form onSubmit={searchRides} style={{ marginBottom: '0.75rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
           <div>
-            <label className="block text-sm text-gray-700 mb-1">From</label>
-            <select value={from} onChange={e => handleFrom(e.target.value)} disabled={to !== '' && to !== 'NED University'} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <label style={{ display: 'block', fontSize: '0.875rem', color: '#374151', marginBottom: '0.25rem' }}>From</label>
+            <select 
+              value={from} 
+              onChange={e => handleFrom(e.target.value)} 
+              disabled={to !== '' && to !== 'NED University'} 
+              style={{ 
+                width: '100%', 
+                padding: '0.5rem', 
+                border: '1px solid #d1d5db', 
+                borderRadius: '0.5rem', 
+                fontSize: '0.875rem',
+                outline: 'none'
+              }}
+            >
               {locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm text-gray-700 mb-1">To</label>
-            <select value={to} onChange={e => handleTo(e.target.value)} disabled={from !== '' && from !== 'NED University'} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <label style={{ display: 'block', fontSize: '0.875rem', color: '#374151', marginBottom: '0.25rem' }}>To</label>
+            <select 
+              value={to} 
+              onChange={e => handleTo(e.target.value)} 
+              disabled={from !== '' && from !== 'NED University'} 
+              style={{ 
+                width: '100%', 
+                padding: '0.5rem', 
+                border: '1px solid #d1d5db', 
+                borderRadius: '0.5rem', 
+                fontSize: '0.875rem',
+                outline: 'none'
+              }}
+            >
               {locations.map(loc => loc !== from && <option key={loc} value={loc}>{loc}</option>)}
             </select>
           </div>
         </div>
-        {/* Show females-only option only for female users */}
         {((user?.gender || '').toLowerCase() === 'female') && (
-          <div className="mt-4">
-            <label className="inline-flex items-center text-gray-800"><input type="checkbox" checked={femalesOnly} onChange={e => setFemalesOnly(e.target.checked)} className="mr-2" />Females only</label>
+          <div style={{ marginTop: '0.75rem' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', color: '#1f2937', fontSize: '0.875rem' }}>
+              <input type="checkbox" checked={femalesOnly} onChange={e => setFemalesOnly(e.target.checked)} style={{ marginRight: '0.5rem' }} />
+              Females only
+            </label>
           </div>
         )}
-        <div className="mt-4">
-          <label className="block text-sm text-gray-700 mb-1">Preferred Vehicle Types</label>
-          <div className="flex flex-wrap gap-4">
+        <div style={{ marginTop: '0.75rem' }}>
+          <label style={{ display: 'block', fontSize: '0.875rem', color: '#374151', marginBottom: '0.25rem' }}>Preferred Vehicle Types</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
             {VEHICLE_TYPES.map(t => (
-              <label key={t.value} className="inline-flex items-center text-gray-900">
-                <input type="checkbox" checked={types.includes(t.value)} onChange={() => handleType(t.value)} className="mr-2" /> {t.label}
+              <label key={t.value} style={{ display: 'inline-flex', alignItems: 'center', color: '#111827', fontSize: '0.875rem' }}>
+                <input type="checkbox" checked={types.includes(t.value)} onChange={() => handleType(t.value)} style={{ marginRight: '0.5rem' }} /> {t.label}
               </label>
             ))}
           </div>
         </div>
-        <div className="mt-6">
-          <button type="submit" disabled={loading} className="px-6 py-3 rounded-xl bg-blue-700 text-white hover:bg-blue-800 disabled:opacity-60 font-medium">{loading ? 'Searching…' : 'Search for Rides'}</button>
+        <div style={{ marginTop: '0.75rem' }}>
+          <button 
+            type="submit" 
+            disabled={loading} 
+            style={{ 
+              padding: '0.5rem 1.25rem', 
+              borderRadius: '0.5rem', 
+              backgroundColor: '#1d4ed8', 
+              color: 'white', 
+              border: 'none',
+              fontWeight: '500', 
+              fontSize: '0.875rem',
+              cursor: 'pointer',
+              opacity: loading ? 0.6 : 1
+            }}
+          >
+            {loading ? 'Searching…' : 'Search for Rides'}
+          </button>
         </div>
       </form>
       {showFallbackModal && (
-        <div className="bg-blue-100 p-10 rounded-3xl shadow-xl text-center w-full max-w-md border-2 border-blue-200">
-          <div className="bg-blue-100 p-8 rounded-2xl shadow-xl text-center w-full max-w-md">
-            <h3 className="mb-3 font-semibold text-red">No matching rides found!</h3>
-            <div className="text-gray-700">Choose a fallback ride type to post:</div>
-            <div className="my-4 flex justify-center gap-4">
-              <button className={`px-6 py-3 rounded-xl font-medium ${fallbackType === 'rickshaw' ? 'bg-blue-700 text-white' : 'bg-white text-gray-900 border-2 border-blue-200'}`} onClick={() => setFallbackType('rickshaw')}>Rickshaw</button>
-              <button className={`px-6 py-3 rounded-xl font-medium ${fallbackType === 'carpool' ? 'bg-blue-700 text-white' : 'bg-white text-gray-900 border-2 border-blue-200'}`} onClick={() => setFallbackType('carpool')}>Car</button>
-            </div>
-            <button
-              className="mt-2 px-8 py-3 rounded-xl bg-green-600 text-white disabled:opacity-60 font-medium hover:bg-green-700"
-              disabled={fallbackType !== 'rickshaw' && fallbackType !== 'carpool'}
-              onClick={postFallbackRide}
-            >Post Fallback Ride</button>
-            <div>
-              <button className="mt-6 underline text-gray-600 font-medium" onClick={() => { setShowFallbackModal(false); setFallbackType('') }}>Cancel</button>
-            </div>
+        <div style={{ backgroundColor: '#dbeafe', padding: '0.75rem', borderRadius: '0.75rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', textAlign: 'center', maxWidth: '300px', margin: '0 auto', border: '2px solid #bfdbfe' }}>
+          <h3 style={{ marginBottom: '0.5rem', fontWeight: '600', color: '#dc2626', fontSize: '1rem' }}>No matching rides found!</h3>
+          <div style={{ color: '#374151', fontSize: '0.875rem' }}>Choose a fallback ride type to post:</div>
+          <div style={{ margin: '0.75rem 0', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
+            <button 
+              style={{ 
+                padding: '0.5rem 0.75rem', 
+                borderRadius: '0.5rem', 
+                fontWeight: '500',
+                fontSize: '0.875rem',
+                border: fallbackType === 'rickshaw' ? 'none' : '2px solid #bfdbfe',
+                backgroundColor: fallbackType === 'rickshaw' ? '#1d4ed8' : 'white',
+                color: fallbackType === 'rickshaw' ? 'white' : '#111827',
+                cursor: 'pointer'
+              }} 
+              onClick={() => setFallbackType('rickshaw')}
+            >
+              Rickshaw
+            </button>
+            <button 
+              style={{ 
+                padding: '0.5rem 0.75rem', 
+                borderRadius: '0.5rem', 
+                fontWeight: '500',
+                fontSize: '0.875rem',
+                border: fallbackType === 'carpool' ? 'none' : '2px solid #bfdbfe',
+                backgroundColor: fallbackType === 'carpool' ? '#1d4ed8' : 'white',
+                color: fallbackType === 'carpool' ? 'white' : '#111827',
+                cursor: 'pointer'
+              }} 
+              onClick={() => setFallbackType('carpool')}
+            >
+              Car
+            </button>
+          </div>
+          <button
+            style={{ 
+              marginTop: '0.25rem', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '0.5rem', 
+              backgroundColor: '#16a34a', 
+              color: 'white', 
+              border: 'none',
+              fontWeight: '500',
+              fontSize: '0.875rem',
+              cursor: 'pointer',
+              opacity: (fallbackType !== 'rickshaw' && fallbackType !== 'carpool') ? 0.6 : 1
+            }}
+            disabled={fallbackType !== 'rickshaw' && fallbackType !== 'carpool'}
+            onClick={postFallbackRide}
+          >
+            Post Fallback Ride
+          </button>
+          <div>
+            <button 
+              style={{ 
+                marginTop: '0.5rem', 
+                textDecoration: 'underline', 
+                color: '#4b5563', 
+                fontWeight: '500',
+                fontSize: '0.875rem',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer'
+              }} 
+              onClick={() => { setShowFallbackModal(false); setFallbackType('') }}
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
       {rides.length > 0 && (
         <div>
-          <div className="font-semibold mb-2">Matching rides (including nearby locations):</div>
-          <ul className="space-y-3">
+          <div style={{ fontWeight: '600', marginBottom: '0.5rem', fontSize: '1rem', color: '#111827' }}>Matching rides:</div>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {rides.map(r => {
               const available = r.availableSlots ?? 0
               return (
-                <li key={r.rideID} className="p-3 bg-gray-50 rounded-lg flex flex-col md:flex-row md:items-center md:justify-between">
-                  <div className="text-gray-900">
-                    <span className="font-semibold">{r.from} → {r.to}</span> |
-                    {/* Show leadDisplay (username - type - seats) when available, else fall back to separate fields */}
-                    {/* Render a clear, structured display: username | type: <type> | seats available : <number> */}
-                    <span className="text-gray-700">
-                      {(r.leadUserName || r.leadUserID)} | type: {r.rideType} | seats available : {available}
-                      {r.currentCapacity > 1 && <span className="text-blue-600"> ({r.currentCapacity - 1} already accepted)</span>}
+                <li key={r.rideID} style={{ 
+                  padding: '0.5rem', 
+                  backgroundColor: '#f9fafb', 
+                  borderRadius: '0.5rem', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  marginBottom: '0.5rem',
+                  fontSize: '0.875rem'
+                }}>
+                  <div style={{ color: '#111827', textAlign: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontWeight: '600' }}>{r.from} → {r.to}</span> |
+                    <span style={{ color: '#374151' }}>
+                      {(r.leadUserName || r.leadUserID)} | type: {r.rideType} | seats: {available}
+                      {r.currentCapacity > 1 && <span style={{ color: '#2563eb' }}> ({r.currentCapacity - 1} accepted)</span>}
                     </span>
                   </div>
                   <button
-                    className="mt-2 md:mt-0 px-4 py-2 rounded-xl bg-blue-700 text-white hover:bg-blue-800 disabled:opacity-60 font-medium"
+                    style={{ 
+                      padding: '0.5rem 1rem', 
+                      borderRadius: '0.5rem', 
+                      backgroundColor: '#1d4ed8', 
+                      color: 'white', 
+                      border: 'none',
+                      fontWeight: '500',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      opacity: r.leadUserID === userID ? 0.6 : 1
+                    }}
                     onClick={() => requestToJoin(r.rideID)}
                     disabled={r.leadUserID === userID}>
                     Request to Join
@@ -235,8 +341,8 @@ export default function RideRequestForm() {
           </ul>
         </div>
       )}
-      {noMatch && <div className="mt-3 text-amber-700 bg-amber-50 px-3 py-2 rounded">{noMatch}</div>}
-      {confirmMsg && <div className="mt-3 text-green-700 bg-green-50 px-3 py-2 rounded">{confirmMsg}</div>}
+      {noMatch && <div style={{ marginTop: '0.5rem', color: '#92400e', backgroundColor: '#fef3c7', padding: '0.5rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>{noMatch}</div>}
+      {confirmMsg && <div style={{ marginTop: '0.5rem', color: '#166534', backgroundColor: '#dcfce7', padding: '0.5rem', borderRadius: '0.5rem', fontSize: '0.875rem' }}>{confirmMsg}</div>}
     </div>
   )
 }
