@@ -4,7 +4,11 @@ import { rideAPI, userAPI } from '../api/client'
 import { useNavigate } from 'react-router-dom'
 import NotificationBanner from '../components/NotificationBanner'
 
-export default function CurrentRide() {
+interface CurrentRideProps {
+  onRideEnded?: () => Promise<void> | void
+}
+
+export default function CurrentRide({ onRideEnded }: CurrentRideProps) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [myRides, setMyRides] = useState<any[]>([])
@@ -78,7 +82,12 @@ export default function CurrentRide() {
     if (!user) return
     try {
       await rideAPI.startRide(rideID, String(user.id))
-      refreshMyRides()
+      // Refresh parent state to update Rides.tsx
+      if (onRideEnded) {
+        await onRideEnded()
+      } else {
+        refreshMyRides()
+      }
     } catch (e: any) {
       alert(e?.response?.data?.error || 'Failed to start ride')
     }
@@ -91,7 +100,12 @@ export default function CurrentRide() {
     }
     try {
       await rideAPI.endRide(rideID, String(user.id))
-      refreshMyRides()
+      // Refresh parent state to update Rides.tsx
+      if (onRideEnded) {
+        await onRideEnded()
+      } else {
+        refreshMyRides()
+      }
     } catch (e: any) {
       alert(e?.response?.data?.error || 'Failed to end ride')
     }

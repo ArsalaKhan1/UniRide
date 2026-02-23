@@ -147,7 +147,7 @@ export default function Navbar() {
         <div style={{ padding: '0 1.5rem', flex: 1 }}>
           <button
             onClick={() => {
-              navigate('/current-ride')
+              navigate('/rides')
               setSidebarOpen(false)
             }}
             style={{
@@ -165,30 +165,7 @@ export default function Navbar() {
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#bfdbfe'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#dbeafe'}
           >
-            Current Ride
-          </button>
-
-          <button
-            onClick={() => {
-              navigate('/ride')
-              setSidebarOpen(false)
-            }}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              marginBottom: '0.75rem',
-              backgroundColor: '#dbeafe',
-              border: 'none',
-              borderRadius: '0.5rem',
-              fontSize: '1rem',
-              fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'background-color 0.3s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#bfdbfe'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#dbeafe'}
-          >
-            Browse Rides
+            Rides
           </button>
           
           <button

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useRideLocations } from '../hooks/useRideLocations'
 import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import { requestAPI, rideAPI } from '../api/client'
 
 const VEHICLE_TYPES = [
@@ -12,6 +13,7 @@ const VEHICLE_TYPES = [
 export default function RideRequestForm() {
   const locations = useRideLocations()
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [from, setFrom] = useState('NED University')
   const [to, setTo] = useState('')
   const [types, setTypes] = useState<string[]>([])
@@ -111,7 +113,10 @@ export default function RideRequestForm() {
         rideType: fallbackType,
         femalesOnly,
       });
-      setNoMatch(`No matching rides found — but you've posted your request as a new ${fallbackType === 'carpool' ? 'Car' : 'Rickshaw'} ride (Ride #${data.rideID ?? ''}). You're now the lead! Others will be able to join your ride.`);
+      setNoMatch(`No matching rides found — but you've posted your request as a new ${fallbackType === 'carpool' ? 'Car' : 'Rickshaw'} ride (Ride #${data.rideID ?? ''}). Redirecting...`);
+      setTimeout(() => {
+        navigate('/rides', { state: { refresh: true } })
+      }, 500)
     } catch (e: any) {
       setNoMatch(e?.message || 'Error posting fallback ride');
     } finally {

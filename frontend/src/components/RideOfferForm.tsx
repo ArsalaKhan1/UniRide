@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useRideLocations } from '../hooks/useRideLocations'
 import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import { rideAPI } from '../api/client'
 
 export default function RideOfferForm() {
@@ -12,6 +13,7 @@ export default function RideOfferForm() {
   const [loading, setLoading] = useState(false)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const { user } = useAuth()
+  const navigate = useNavigate()
   const locations = useRideLocations()
 
   function handleFrom(value: string) {
@@ -37,7 +39,10 @@ export default function RideOfferForm() {
         femalesOnly,
         seats,
       })
-      setSuccessMsg('Your ride has been posted successfully! Passengers will start seeing your offer soon.')
+      setSuccessMsg('Your ride has been posted successfully! Redirecting...')
+      setTimeout(() => {
+        navigate('/rides', { state: { refresh: true } })
+      }, 500)
     } catch (e: any) {
       setSuccessMsg(e?.message || 'Error creating ride')
     } finally {

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export default function Landing() {
-  const { loginWithGoogle } = useAuth()
+  const { loginWithGoogle, user } = useAuth()
   const navigate = useNavigate()
 
   const [enrollmentId, setEnrollmentId] = useState('')
@@ -76,7 +76,7 @@ export default function Landing() {
       await loginWithGoogle(pendingCredential, enrollmentId)
       setPendingCredential(null)
       setGoogleEmail(null)
-      navigate('/ride')
+      navigate('/rides', { replace: true })
     } catch (err: any) {
       setError(err?.message || 'Verification failed')
     } finally {

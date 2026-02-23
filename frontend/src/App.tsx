@@ -1,10 +1,9 @@
 import React from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Landing from './pages/Landing'
-import CurrentRide from './pages/CurrentRide'
+import Rides from './pages/Rides'
 import RideHistory from './pages/RideHistory'
 import ChatPage from './pages/ChatPage'
-import RideInteractionScreen from './pages/RideInteractionScreen'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Navbar from './components/Navbar'
 
@@ -23,20 +22,12 @@ function AppContent() {
       {showNavbar && <Navbar />}
           <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/ride" element={
+            <Route path="/rides" element={
               <PrivateRoute>
-                <RideInteractionScreen />
+                <Rides />
               </PrivateRoute>
             } />
-            <Route path="/dashboard" element={<Navigate to="/current-ride" replace />} />
-            <Route
-              path="/current-ride"
-              element={
-                <PrivateRoute>
-                  <CurrentRide />
-                </PrivateRoute>
-              }
-            />
+            <Route path="/dashboard" element={<Navigate to="/rides" replace />} />
             <Route
               path="/ride-history"
               element={
