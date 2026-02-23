@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { rideAPI } from '../api/client'
-import { Link } from 'react-router-dom'
+import { rideAPI, userAPI } from '../api/client'
+import { useNavigate } from 'react-router-dom'
 import NotificationBanner from '../components/NotificationBanner'
 
 export default function CurrentRide() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [myRides, setMyRides] = useState<any[]>([])
+  const [passengerRides, setPassengerRides] = useState<any[]>([])
   const [pendingRequests, setPendingRequests] = useState<{ [rideId: number]: any[] }>({})
   const [acceptedPassengers, setAcceptedPassengers] = useState<{ [rideId: number]: any[] }>({})
   const [loading, setLoading] = useState(false)
@@ -15,9 +17,13 @@ export default function CurrentRide() {
     if (!user) return
     setLoading(true)
     try {
-      const res = await rideAPI.getAll()
-      const owned = res.data.rides?.filter((r: any) => r.leadUserID === user.id) || []
+      const [ridesRes, acceptedRes] = await Promise.all([
+        rideAPI.getAll(),
+        userAPI.getAcceptedRequests(String(user.id))
+      ])
+      const owned = ridesRes.data.rides?.filter((r: any) => r.leadUserID === user.id) || []
       setMyRides(owned)
+      setPassengerRides(acceptedRes.data.acceptedRequests || [])
     } finally {
       setLoading(false)
     }
@@ -92,12 +98,49 @@ export default function CurrentRide() {
   }
 
   const activeRides = myRides.filter(r => r.status !== 'completed')
+  const activePassengerRides = passengerRides.filter(r => r.status !== 'completed')
 
   return (
     <div style={{ margin: '0 auto', padding: '10px', maxWidth: '800px' }}>
       <h2 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '32px', color: '#111827', textAlign: 'center' }}>Current Ride</h2>
-      <NotificationBanner />
-      {activeRides.length > 0 ? activeRides.map(ride => {
+      
+      {activePassengerRides.length > 0 && (
+        <div style={{ marginBottom: '32px' }}>
+          {activePassengerRides.map(ride => {
+            const rideStatus = ride.status || 'open'
+            const isCompleted = rideStatus === 'completed'
+            const statusColor = rideStatus === 'started' ? '#059669' : rideStatus === 'completed' ? '#6b7280' : '#2563eb'
+
+            return (
+              <div key={ride.rideID} style={{ margin: '16px 0', padding: '24px', backgroundColor: '#f0fdf4', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '2px solid #bbf7d0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontSize: '18px', fontWeight: '600', color: '#111827' }}>Ride - {ride.from} to {ride.to}</div>
+                    <div style={{ fontSize: '14px', color: '#4b5563', marginTop: '4px' }}>
+                      Type: {ride.rideType} | Lead: {ride.leadUserName || ride.leadUserID} |
+                      Status: <span style={{ fontWeight: '600', color: statusColor }}>
+                        {rideStatus.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                  {!isCompleted && (
+                    <button
+                      onClick={() => navigate(`/chat/${ride.rideID}`)}
+                      style={{ padding: '10px 20px', border: 'none', borderRadius: '12px', fontWeight: '500', cursor: 'pointer', fontSize: '14px', backgroundColor: '#2563eb', color: 'white' }}
+                    >
+                      Open Chat
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {activeRides.length > 0 && (
+        <div>
+          {activeRides.map(ride => {
         const accepted = acceptedPassengers[ride.rideID] || []
         const hasAccepted = accepted.length > 0
         const hasPendingRequests = (pendingRequests[ride.rideID] || []).length > 0
@@ -141,12 +184,12 @@ export default function CurrentRide() {
                 )}
 
                 {showChat && (
-                  <Link
-                    to={`/chat/${ride.rideID}`}
-                    style={{ fontSize: '14px', color: '#1d4ed8', textDecoration: 'underline', fontWeight: '500', display: 'flex', alignItems: 'center' }}
+                  <button
+                    onClick={() => navigate(`/chat/${ride.rideID}`)}
+                    style={{ padding: '10px 20px', border: 'none', borderRadius: '12px', fontWeight: '500', cursor: 'pointer', fontSize: '14px', backgroundColor: '#2563eb', color: 'white' }}
                   >
                     Open Chat
-                  </Link>
+                  </button>
                 )}
               </div>
             </div>
@@ -183,7 +226,13 @@ export default function CurrentRide() {
             )}
           </div>
         )
-      }) : null}
+      })}
+        </div>
+      )}
+
+      {activeRides.length === 0 && activePassengerRides.length === 0 && (
+        <div style={{ color: '#4b5563', fontSize: '16px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '40vh' }}>You have no active rides.</div>
+      )}
     </div>
   )
 }
