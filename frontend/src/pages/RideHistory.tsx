@@ -45,7 +45,7 @@ export default function RideHistory() {
             </div>
           </div>
         )
-      }) : <div style={{ color: '#4b5563', fontSize: '16px' }}>{loading ? 'Loading your rides…' : 'No completed rides yet.'}</div>}
+      }) : <div style={{ margin: '24px 0 24px 100px', color: '#4b5563', fontSize: '16px' }}>{loading ? 'Loading your rides…' : 'No completed rides yet.'}</div>}
     </div>
   )
 }
