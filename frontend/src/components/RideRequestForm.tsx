@@ -139,7 +139,7 @@ export default function RideRequestForm() {
       borderRadius: '1rem',
       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
       maxWidth: '700px',
-      margin: '0.5rem auto',
+      margin: '3rem auto 0.5rem',
       border: '2px solid #bfdbfe',
       textAlign: 'center'
     }}>
@@ -158,7 +158,9 @@ export default function RideRequestForm() {
                 border: '1px solid #d1d5db', 
                 borderRadius: '0.5rem', 
                 fontSize: '0.875rem',
-                outline: 'none'
+                outline: 'none',
+                appearance: 'auto',
+                direction: 'ltr'
               }}
             >
               {locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
@@ -176,7 +178,9 @@ export default function RideRequestForm() {
                 border: '1px solid #d1d5db', 
                 borderRadius: '0.5rem', 
                 fontSize: '0.875rem',
-                outline: 'none'
+                outline: 'none',
+                appearance: 'auto',
+                direction: 'ltr'
               }}
             >
               {locations.map(loc => loc !== from && <option key={loc} value={loc}>{loc}</option>)}
@@ -313,7 +317,7 @@ export default function RideRequestForm() {
                   fontSize: '0.875rem'
                 }}>
                   <div style={{ color: '#111827', textAlign: 'center', marginBottom: '0.5rem' }}>
-                    <span style={{ fontWeight: '600' }}>{r.from} → {r.to}</span> |
+                    <span style={{ fontWeight: '600' }}>{r.from} → {r.to}</span> |  
                     <span style={{ color: '#374151' }}>
                       {(r.leadUserName || r.leadUserID)} | type: {r.rideType} | seats: {available}
                       {r.currentCapacity > 1 && <span style={{ color: '#2563eb' }}> ({r.currentCapacity - 1} accepted)</span>}

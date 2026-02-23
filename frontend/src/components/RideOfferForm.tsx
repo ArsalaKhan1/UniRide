@@ -53,7 +53,7 @@ export default function RideOfferForm() {
         borderRadius: '1rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         maxWidth: '700px',
-        margin: '0.5rem auto',
+        margin: '3rem auto 0.5rem',
         border: '2px solid #bfdbfe',
         textAlign: 'center'
       }} 
@@ -73,7 +73,9 @@ export default function RideOfferForm() {
               border: '1px solid #d1d5db', 
               borderRadius: '0.5rem', 
               fontSize: '0.875rem',
-              outline: 'none'
+              outline: 'none',
+              appearance: 'auto',
+              direction: 'ltr'
             }}
           >
             {locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
@@ -91,7 +93,9 @@ export default function RideOfferForm() {
               border: '1px solid #d1d5db', 
               borderRadius: '0.5rem', 
               fontSize: '0.875rem',
-              outline: 'none'
+              outline: 'none',
+              appearance: 'auto',
+              direction: 'ltr'
             }}
           >
             {locations.map(loc => loc !== from && <option key={loc} value={loc}>{loc}</option>)}
@@ -128,7 +132,9 @@ export default function RideOfferForm() {
             border: '1px solid #d1d5db', 
             borderRadius: '0.5rem', 
             fontSize: '0.875rem',
-            outline: 'none'
+            outline: 'none',
+            appearance: 'auto',
+            direction: 'ltr'
           }}
         >
           {rideType === 'bike' ? (

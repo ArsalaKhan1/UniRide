@@ -1,7 +1,8 @@
 import React from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Landing from './pages/Landing'
-import Dashboard from './pages/Dashboard'
+import CurrentRide from './pages/CurrentRide'
+import RideHistory from './pages/RideHistory'
 import ChatPage from './pages/ChatPage'
 import RideInteractionScreen from './pages/RideInteractionScreen'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -15,11 +16,11 @@ function PrivateRoute({ children }: { children: JSX.Element }) {
 function AppContent() {
   const location = useLocation()
   const showNavbar = location.pathname !== '/'
+  const isChatPage = location.pathname.startsWith('/chat/')
 
   return (
     <div className="min-h-screen bg-gray-100">
       {showNavbar && <Navbar />}
-      <div className="container mx-auto p-4">
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/ride" element={
@@ -27,11 +28,20 @@ function AppContent() {
                 <RideInteractionScreen />
               </PrivateRoute>
             } />
+            <Route path="/dashboard" element={<Navigate to="/current-ride" replace />} />
             <Route
-              path="/dashboard"
+              path="/current-ride"
               element={
                 <PrivateRoute>
-                  <Dashboard />
+                  <CurrentRide />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/ride-history"
+              element={
+                <PrivateRoute>
+                  <RideHistory />
                 </PrivateRoute>
               }
             />
@@ -44,7 +54,6 @@ function AppContent() {
               }
             />
           </Routes>
-      </div>
     </div>
   )
 }

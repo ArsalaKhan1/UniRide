@@ -86,13 +86,34 @@ export default function Landing() {
 
   return (
     <div style={{ minHeight: '50vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Hero Section with Sign In */}
+      {/* Hero Section */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '0.75rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <h1 style={{ fontSize: '3rem', fontWeight: '800', color: '#111827', letterSpacing: '-0.025em', marginBottom: '0.25rem' }}>UniRide</h1>
           <p style={{ fontSize: '1.25rem', color: '#4b5563' }}>University ride-sharing for <span style={{ fontWeight: '600', color: '#2563eb' }}>cloud.neduet.edu.pk</span></p>
         </div>
+      </div>
 
+      {/* Feature Cards Section */}
+      <section style={{ padding: '0 1rem 1.5rem' }}>
+        <div style={{ maxWidth: '72rem', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+          <div style={{ padding: '1.5rem', backgroundColor: '#dbeafe', borderRadius: '1.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', border: '2px solid #bfdbfe', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827', marginBottom: '0.75rem' }}>🔵 Offer</div>
+            <div style={{ fontSize: '1rem', color: '#374151' }}>Share your car or bike ride with classmates heading the same way.</div>
+          </div>
+          <div style={{ padding: '1.5rem', backgroundColor: '#dbeafe', borderRadius: '1.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', border: '2px solid #bfdbfe', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827', marginBottom: '0.75rem' }}>🔵 Request</div>
+            <div style={{ fontSize: '1rem', color: '#374151' }}>Find a car or rickshaw to travel together with fellow students.</div>
+          </div>
+          <div style={{ padding: '1.5rem', backgroundColor: '#dbeafe', borderRadius: '1.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', border: '2px solid #bfdbfe', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827', marginBottom: '0.75rem' }}>🔵 Chat</div>
+            <div style={{ fontSize: '1rem', color: '#374151' }}>Coordinate pickup details and timing with your ride group easily.</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Google Sign-In Section */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: '2rem' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1rem' }}>
           <div id="g_id_signin" />
           {!GSI_CLIENT_ID && (
@@ -136,24 +157,6 @@ export default function Landing() {
           </div>
         )}
       </div>
-
-      {/* Feature Cards Section */}
-      <section style={{ padding: '0 1rem 0.5rem' }}>
-        <div style={{ maxWidth: '72rem', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-          <div style={{ padding: '1.5rem', backgroundColor: '#dbeafe', borderRadius: '1.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', border: '2px solid #bfdbfe', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827', marginBottom: '0.75rem' }}>🔵 Offer</div>
-            <div style={{ fontSize: '1rem', color: '#374151' }}>Share your car or bike ride with classmates heading the same way.</div>
-          </div>
-          <div style={{ padding: '1.5rem', backgroundColor: '#dbeafe', borderRadius: '1.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', border: '2px solid #bfdbfe', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827', marginBottom: '0.75rem' }}>🔵 Request</div>
-            <div style={{ fontSize: '1rem', color: '#374151' }}>Find a car or rickshaw to travel together with fellow students.</div>
-          </div>
-          <div style={{ padding: '1.5rem', backgroundColor: '#dbeafe', borderRadius: '1.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', border: '2px solid #bfdbfe', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827', marginBottom: '0.75rem' }}>🔵 Chat</div>
-            <div style={{ fontSize: '1rem', color: '#374151' }}>Coordinate pickup details and timing with your ride group easily.</div>
-          </div>
-        </div>
-      </section>
     </div>
   )
 }

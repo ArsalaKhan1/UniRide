@@ -1,37 +1,242 @@
-import React from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
-  const location = useLocation()
   const navigate = useNavigate()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const handleLogout = () => {
+    logout()
+    setSidebarOpen(false)
+    navigate('/')
+  }
 
   return (
-    <nav className="bg-white/90 backdrop-blur shadow-sm sticky top-0 z-40">
-      <div className="container mx-auto px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link to="/" style={{ color: "#1e40af" }} className="font-extrabold text-4xl  hover:opacity-80 transition">UniRide</Link>
-          {user && (
-            <div className="hidden md:flex items-center gap-6 text-sm">
-              <button onClick={() => navigate('/ride')} style={{ height: "2rem", width: "3rem",  marginRight: "0.5rem"  }} className={`px-10 py-10 rounded-2xl bg-blue-200 hover:bg-blue-700 border-none ${location.pathname.startsWith('/ride') ? 'font-semibold' : ''}`}>
-                Ride</button>
-              <button onClick={() => navigate('/dashboard')} style={{ height: "2rem" , width: "5rem"  }} className={`px-10 py-10 rounded-2xl bg-blue-200 hover:bg-blue-700 border-none ${location.pathname.startsWith('/dashboard') ? 'font-semibold' : ''}`}>Dashboard</button>
-            </div>
-          )}
+    <>
+      <nav style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backdropFilter: 'blur(10px)',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 40
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '0.75rem 1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <Link to="/" style={{
+            color: '#1e40af',
+            fontWeight: 800,
+            fontSize: '2.25rem',
+            textDecoration: 'none',
+            transition: 'opacity 0.3s'
+          }} onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'} onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
+            UniRide
+          </Link>
+          
+          <div>
+            {user ? (
+              <div
+                onClick={() => setSidebarOpen(true)}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: '#1e40af',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.25rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'background-color 0.3s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a8a'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1e40af'}
+              >
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+            ) : (
+              <button style={{
+                padding: '0.375rem 1rem',
+                borderRadius: '0.75rem',
+                backgroundColor: '#1e40af',
+                color: 'white',
+                border: 'none',
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'background-color 0.3s'
+              }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a8a'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1e40af'}>
+                Sign in
+              </button>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          {user ? (
-            <>
-              <span className="hidden sm:block text-sm text-gray-700 mr-1">{user.name} ({user.email})</span>
-              <button onClick={logout} className="px-2 py-1.5 rounded-xl bg-blue-700 text-white hover:bg-blue-800 font-medium">Logout</button>
-            </>
-          ) : (
-            // <Link to="/" className="px-4 py-1.5 rounded-xl bg-blue-700 text-white hover:bg-blue-700 font-medium">Sign in</Link>
-            <button className="px-4 py-1.5 rounded-xl bg-blue-700 text-white hover:bg-blue-800 font-medium">Sign in</button>
-          )}
+      </nav>
+
+      {/* Overlay */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 50,
+            transition: 'opacity 0.3s'
+          }}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        width: '300px',
+        backgroundColor: 'white',
+        boxShadow: '-2px 0 8px rgba(0, 0, 0, 0.15)',
+        zIndex: 51,
+        transform: sidebarOpen ? 'translateX(0)' : 'translateX(100%)',
+        transition: 'transform 0.3s ease-in-out',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        {/* Close button */}
+        <div style={{ padding: '1rem', textAlign: 'right' }}>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              color: '#6b7280',
+              lineHeight: 1
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* User info */}
+        {user && (
+          <div style={{ padding: '0 1.5rem 1.5rem' }}>
+            <div style={{ fontWeight: 700, fontSize: '1.125rem', marginBottom: '0.25rem' }}>
+              {user.name}
+            </div>
+            <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+              {user.email}
+            </div>
+          </div>
+        )}
+
+        {/* Navigation buttons */}
+        <div style={{ padding: '0 1.5rem', flex: 1 }}>
+          <button
+            onClick={() => {
+              navigate('/current-ride')
+              setSidebarOpen(false)
+            }}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              marginBottom: '0.75rem',
+              backgroundColor: '#dbeafe',
+              border: 'none',
+              borderRadius: '0.5rem',
+              fontSize: '1rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'background-color 0.3s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#bfdbfe'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#dbeafe'}
+          >
+            Current Ride
+          </button>
+
+          <button
+            onClick={() => {
+              navigate('/ride')
+              setSidebarOpen(false)
+            }}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              marginBottom: '0.75rem',
+              backgroundColor: '#dbeafe',
+              border: 'none',
+              borderRadius: '0.5rem',
+              fontSize: '1rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'background-color 0.3s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#bfdbfe'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#dbeafe'}
+          >
+            Browse Rides
+          </button>
+          
+          <button
+            onClick={() => {
+              navigate('/ride-history')
+              setSidebarOpen(false)
+            }}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              backgroundColor: '#dbeafe',
+              border: 'none',
+              borderRadius: '0.5rem',
+              fontSize: '1rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'background-color 0.3s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#bfdbfe'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#dbeafe'}
+          >
+            Ride History
+          </button>
+        </div>
+
+        {/* Logout button at bottom */}
+        <div style={{ padding: '1.5rem' }}>
+          <button
+            onClick={handleLogout}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              backgroundColor: '#1e40af',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.5rem',
+              fontSize: '1rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'background-color 0.3s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a8a'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1e40af'}
+          >
+            Logout
+          </button>
         </div>
       </div>
-    </nav>
+    </>
   )
 }

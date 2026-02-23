@@ -6,9 +6,9 @@ export default function RideInteractionScreen() {
   const [choice, setChoice] = useState<null | 'offer' | 'request'>(null)
 
   if (!choice) return (
-    <div style={{
+    <div className="container mx-auto p-4" style={{
       maxWidth: '800px',
-      margin: '2rem auto',
+      margin: '4rem auto 2rem',
       padding: '2.5rem',
       backgroundColor: '#dbeafe',
       borderRadius: '1.5rem',
