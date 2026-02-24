@@ -45,16 +45,6 @@ export default function ChatPage() {
           } catch (e) {
             // ignore
           }
-          // Also fetch pending requests to include their senders in the username map
-          try {
-            const pending = await rideAPI.getRideRequests(Number(rideId))
-            const requests = pending.data.requests || []
-            const mapUpdate: Record<string, string> = {}
-            requests.forEach((req: any) => { mapUpdate[String(req.userID)] = req.userName || req.userID })
-            setUserNames(prev => ({ ...prev, ...mapUpdate }))
-          } catch (e) {
-            // ignore
-          }
         }
       } catch (e) {
         console.error('Failed to fetch ride info', e)
@@ -95,22 +85,12 @@ export default function ChatPage() {
   const fetchAllParticipants = async () => {
     if (!rideId) return
     try {
-      // Fetch accepted passengers
+      // Fetch accepted passengers only
       try {
         const acc = await rideAPI.getAcceptedPassengers(Number(rideId))
         const accepted = acc.data.accepted || []
         const mapUpdate: Record<string, string> = {}
         accepted.forEach((p: any) => { mapUpdate[String(p.userID)] = p.userName })
-        setUserNames(prev => ({ ...prev, ...mapUpdate }))
-      } catch (e) {
-        // ignore
-      }
-      // Also fetch pending requests
-      try {
-        const pending = await rideAPI.getRideRequests(Number(rideId))
-        const requests = pending.data.requests || []
-        const mapUpdate: Record<string, string> = {}
-        requests.forEach((req: any) => { mapUpdate[String(req.userID)] = req.userName || req.userID })
         setUserNames(prev => ({ ...prev, ...mapUpdate }))
       } catch (e) {
         // ignore

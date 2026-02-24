@@ -82,6 +82,7 @@ export default function CurrentRide({ onRideEnded }: CurrentRideProps) {
     if (!user) return
     try {
       await rideAPI.startRide(rideID, String(user.id))
+      setMyRides(rides => rides.map(r => r.rideID === rideID ? { ...r, status: 'started' } : r))
       // Refresh parent state to update Rides.tsx
       if (onRideEnded) {
         await onRideEnded()
@@ -89,7 +90,12 @@ export default function CurrentRide({ onRideEnded }: CurrentRideProps) {
         refreshMyRides()
       }
     } catch (e: any) {
-      alert(e?.response?.data?.error || 'Failed to start ride')
+      const errorMsg = e?.response?.data?.error
+      if (errorMsg === 'Ride is already started') {
+        setMyRides(rides => rides.map(r => r.rideID === rideID ? { ...r, status: 'started' } : r))
+        return
+      }
+      alert(errorMsg || 'Failed to start ride')
     }
   }
 
