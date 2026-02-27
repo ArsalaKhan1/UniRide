@@ -10,17 +10,17 @@ export default function RideInteractionScreen() {
       maxWidth: '800px',
       margin: '4rem auto 2rem',
       padding: '2.5rem',
-      backgroundColor: '#dbeafe',
+      backgroundColor: '#ffffff',
       borderRadius: '1.5rem',
       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-      border: '2px solid #bfdbfe',
+      border: '2px solid #a9abab',
       textAlign: 'center'
     }}>
       <h1 style={{
         fontSize: '1.875rem',
         fontWeight: 'bold',
         marginBottom: '0.5rem',
-        color: '#111827'
+        color: '#e07d2e'
       }}>Looking for a new ride?</h1>
       <p style={{
         marginBottom: '1.5rem',
@@ -40,7 +40,7 @@ export default function RideInteractionScreen() {
         <button
           style={{
             padding: '1rem 2.5rem',
-            backgroundColor: '#1d4ed8',
+            backgroundColor: '#e07d2e',
             color: 'white',
             borderRadius: '0.75rem',
             fontWeight: '500',
@@ -50,8 +50,8 @@ export default function RideInteractionScreen() {
             minWidth: '120px'
           }}
           onClick={() => setChoice('offer')}
-          onMouseOver={(e) => e.target.style.backgroundColor = '#1e40af'}
-          onMouseOut={(e) => e.target.style.backgroundColor = '#1d4ed8'}
+          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#c96b1f')}
+          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#e07d2e')}
         >Yes</button>
         <button
           style={{
@@ -61,13 +61,14 @@ export default function RideInteractionScreen() {
             borderRadius: '0.75rem',
             fontWeight: '500',
             fontSize: '1.125rem',
-            border: '2px solid #bfdbfe',
+            border: '2px solid #a9abab',
             cursor: 'pointer',
             minWidth: '120px'
           }}
           onClick={() => setChoice('request')}
-          onMouseOver={(e) => e.target.style.backgroundColor = '#f9fafb'}
-          onMouseOut={(e) => e.target.style.backgroundColor = 'white'}
+          
+          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#f5f5f5')}
+          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'white')}
         >No</button>
       </div>
     </div>

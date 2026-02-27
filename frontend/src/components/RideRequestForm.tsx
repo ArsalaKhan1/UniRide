@@ -140,19 +140,19 @@ export default function RideRequestForm() {
   return (
     <div style={{
       padding: '1rem',
-      backgroundColor: '#dbeafe',
+      backgroundColor: '#ffffff',
       borderRadius: '1rem',
       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
       maxWidth: '700px',
       margin: '3rem auto 0.5rem',
-      border: '2px solid #bfdbfe',
+      border: '2px solid #a9abab',
       textAlign: 'center'
     }}>
-      <h2 style={{ fontWeight: '600', fontSize: '1.25rem', marginBottom: '0.75rem', color: '#111827' }}>Request a Ride</h2>
+      <h2 style={{ fontWeight: '600', fontSize: '1.5rem', marginBottom: '0.75rem', color: '#e07d2e' }}>Request a Ride</h2>
       <form onSubmit={searchRides} style={{ marginBottom: '0.75rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', color: '#374151', marginBottom: '0.25rem' }}>From</label>
+            <label style={{ display: 'block', fontSize: '1rem', color: '#374151', marginBottom: '0.25rem' }}>From</label>
             <select 
               value={from} 
               onChange={e => handleFrom(e.target.value)} 
@@ -172,7 +172,7 @@ export default function RideRequestForm() {
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', color: '#374151', marginBottom: '0.25rem' }}>To</label>
+            <label style={{ display: 'block', fontSize: '1rem', color: '#374151', marginBottom: '0.25rem' }}>To</label>
             <select 
               value={to} 
               onChange={e => handleTo(e.target.value)} 
@@ -194,7 +194,7 @@ export default function RideRequestForm() {
         </div>
         {((user?.gender || '').toLowerCase() === 'female') && (
           <div style={{ marginTop: '0.75rem' }}>
-            <label style={{ display: 'inline-flex', alignItems: 'center', color: '#1f2937', fontSize: '0.875rem' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', color: '#1f2937', fontSize: '1rem' }}>
               <input type="checkbox" checked={femalesOnly} onChange={e => setFemalesOnly(e.target.checked)} style={{ marginRight: '0.5rem' }} />
               Females only
             </label>
@@ -217,7 +217,7 @@ export default function RideRequestForm() {
             style={{ 
               padding: '0.5rem 1.25rem', 
               borderRadius: '0.5rem', 
-              backgroundColor: '#1d4ed8', 
+              backgroundColor: '#e07d2e', 
               color: 'white', 
               border: 'none',
               fontWeight: '500', 
@@ -231,7 +231,7 @@ export default function RideRequestForm() {
         </div>
       </form>
       {showFallbackModal && (
-        <div style={{ backgroundColor: '#dbeafe', padding: '0.75rem', borderRadius: '0.75rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', textAlign: 'center', maxWidth: '300px', margin: '0 auto', border: '2px solid #bfdbfe' }}>
+        <div style={{ backgroundColor: '#ffffff', padding: '0.75rem', borderRadius: '0.75rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', textAlign: 'center', maxWidth: '300px', margin: '0 auto', border: '2px solid #a9abab' }}>
           <h3 style={{ marginBottom: '0.5rem', fontWeight: '600', color: '#dc2626', fontSize: '1rem' }}>No matching rides found!</h3>
           <div style={{ color: '#374151', fontSize: '0.875rem' }}>Choose a fallback ride type to post:</div>
           <div style={{ margin: '0.75rem 0', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
@@ -241,8 +241,8 @@ export default function RideRequestForm() {
                 borderRadius: '0.5rem', 
                 fontWeight: '500',
                 fontSize: '0.875rem',
-                border: fallbackType === 'rickshaw' ? 'none' : '2px solid #bfdbfe',
-                backgroundColor: fallbackType === 'rickshaw' ? '#1d4ed8' : 'white',
+                border: fallbackType === 'rickshaw' ? 'none' : '2px solid #e07d2e',
+                backgroundColor: fallbackType === 'rickshaw' ? '#e07d2e' : 'white',
                 color: fallbackType === 'rickshaw' ? 'white' : '#111827',
                 cursor: 'pointer'
               }} 
@@ -256,8 +256,8 @@ export default function RideRequestForm() {
                 borderRadius: '0.5rem', 
                 fontWeight: '500',
                 fontSize: '0.875rem',
-                border: fallbackType === 'carpool' ? 'none' : '2px solid #bfdbfe',
-                backgroundColor: fallbackType === 'carpool' ? '#1d4ed8' : 'white',
+                border: fallbackType === 'carpool' ? 'none' : '2px solid #e07d2e',
+                backgroundColor: fallbackType === 'carpool' ? '#e07d2e' : 'white',
                 color: fallbackType === 'carpool' ? 'white' : '#111827',
                 cursor: 'pointer'
               }} 
@@ -325,14 +325,14 @@ export default function RideRequestForm() {
                     <span style={{ fontWeight: '600' }}>{r.from} → {r.to}</span> |  
                     <span style={{ color: '#374151' }}>
                       {(r.leadUserName || r.leadUserID)} | type: {r.rideType} | seats: {available}
-                      {r.currentCapacity > 1 && <span style={{ color: '#2563eb' }}> ({r.currentCapacity - 1} accepted)</span>}
+                      {r.currentCapacity > 1 && <span style={{ color: '#e07d2e' }}> ({r.currentCapacity - 1} accepted)</span>}
                     </span>
                   </div>
                   <button
                     style={{ 
                       padding: '0.5rem 1rem', 
                       borderRadius: '0.5rem', 
-                      backgroundColor: '#1d4ed8', 
+                      backgroundColor: '#e07d2e', 
                       color: 'white', 
                       border: 'none',
                       fontWeight: '500',

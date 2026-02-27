@@ -190,10 +190,22 @@ export default function ChatPage() {
         <div style={{
           padding: '24px',
           borderBottom: '2px solid #e5e7eb',
-          backgroundColor: '#f0f9ff'
+          backgroundColor: '#e07d2e'
         }}>
-          <div style={{ fontSize: '11px', fontWeight: '600', color: '#6b7280', letterSpacing: '0.5px', marginBottom: '12px' }}>RIDE LEAD</div>
-          <div style={{ fontSize: '20px', fontWeight: '700', color: '#111827' }}>
+          <div style={{ 
+            fontSize: '11px', 
+            fontWeight: '600', 
+            color: '#ffffff',   // changed for contrast
+            letterSpacing: '0.5px', 
+            marginBottom: '12px' 
+          }}>
+            RIDE LEAD
+          </div>
+          <div style={{ 
+            fontSize: '20px', 
+            fontWeight: '700', 
+            color: '#ffffff'    // changed for readability
+          }}>
             {userNames[rideLeadID || ''] || 'Loading...'}
           </div>
         </div>
@@ -261,7 +273,7 @@ export default function ChatPage() {
                     maxWidth: '60%',
                     padding: '12px 16px',
                     borderRadius: '14px',
-                    backgroundColor: isOwnMessage ? '#2563eb' : '#c1c9d1',
+                    backgroundColor: isOwnMessage ? '#e07d2e' : '#a9abab',
                     color: isOwnMessage ? '#ffffff' : '#111827',
                     wordWrap: 'break-word',
                     fontSize: '16px',
@@ -329,7 +341,7 @@ export default function ChatPage() {
               }}
               placeholder={isCompleted ? "Chat disabled - ride completed" : "Type a message..."}
               disabled={loading || !rideLeadID || isCompleted}
-              onFocus={(e) => !isCompleted && (e.target.style.borderColor = '#3b82f6')}
+              onFocus={(e) => !isCompleted && (e.target.style.borderColor = '#e07d2e')}
               onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
             />
             <button
@@ -339,7 +351,7 @@ export default function ChatPage() {
                 padding: '12px 32px',
                 borderRadius: '24px',
                 border: 'none',
-                backgroundColor: (loading || !text.trim() || !rideLeadID || isCompleted) ? '#9ca3af' : '#3b82f6',
+                backgroundColor: (loading || !text.trim() || !rideLeadID || isCompleted) ? '#9ca3af' : '#e07d2e',
                 color: '#ffffff',
                 fontSize: '15px',
                 fontWeight: '500',
@@ -348,12 +360,12 @@ export default function ChatPage() {
               }}
               onMouseEnter={(e) => {
                 if (!loading && text.trim() && rideLeadID && !isCompleted) {
-                  e.currentTarget.style.backgroundColor = '#2563eb'
+                  e.currentTarget.style.backgroundColor = '#e07d2e'
                 }
               }}
               onMouseLeave={(e) => {
                 if (!loading && text.trim() && rideLeadID && !isCompleted) {
-                  e.currentTarget.style.backgroundColor = '#3b82f6'
+                  e.currentTarget.style.backgroundColor = '#c96b1f'
                 }
               }}
             >

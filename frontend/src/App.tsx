@@ -18,7 +18,7 @@ function AppContent() {
   const isChatPage = location.pathname.startsWith('/chat/')
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen" style={{ backgroundColor: '#faf8f5' }}>
       {showNavbar && <Navbar />}
           <Routes>
             <Route path="/" element={<Landing />} />

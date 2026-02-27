@@ -54,20 +54,20 @@ export default function RideOfferForm() {
     <form 
       style={{
         padding: '1rem',
-        backgroundColor: '#dbeafe',
+        backgroundColor: '#ffffff',
         borderRadius: '1rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         maxWidth: '700px',
         margin: '3rem auto 0.5rem',
-        border: '2px solid #bfdbfe',
+        border: '2px solid #a9abab',
         textAlign: 'center'
       }} 
       onSubmit={offerRide}
     >
-      <h2 style={{ fontWeight: '600', fontSize: '1.25rem', marginBottom: '0.75rem', color: '#111827' }}>Offer a Ride</h2>
+      <h2 style={{ fontWeight: '600', fontSize: '1.5rem', marginBottom: '0.75rem', color: '#e07d2e' }}>Offer a Ride</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
         <div>
-          <label style={{ display: 'block', fontSize: '0.875rem', color: '#374151', marginBottom: '0.25rem' }}>From</label>
+          <label style={{ display: 'block', fontSize: '1rem', color: '#374151', marginBottom: '0.25rem' }}>From</label>
           <select 
             value={from} 
             onChange={e => handleFrom(e.target.value)} 
@@ -77,7 +77,7 @@ export default function RideOfferForm() {
               padding: '0.5rem', 
               border: '1px solid #d1d5db', 
               borderRadius: '0.5rem', 
-              fontSize: '0.875rem',
+              fontSize: '1rem',
               outline: 'none',
               appearance: 'auto',
               direction: 'ltr'
@@ -87,7 +87,7 @@ export default function RideOfferForm() {
           </select>
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: '0.875rem', color: '#374151', marginBottom: '0.25rem' }}>To</label>
+          <label style={{ display: 'block', fontSize: '1rem', color: '#374151', marginBottom: '0.25rem' }}>To</label>
           <select 
             value={to} 
             onChange={e => handleTo(e.target.value)} 
@@ -97,7 +97,7 @@ export default function RideOfferForm() {
               padding: '0.5rem', 
               border: '1px solid #d1d5db', 
               borderRadius: '0.5rem', 
-              fontSize: '0.875rem',
+              fontSize: '1rem',
               outline: 'none',
               appearance: 'auto',
               direction: 'ltr'
@@ -109,14 +109,14 @@ export default function RideOfferForm() {
       </div>
       {((user?.gender || '').toLowerCase() === 'female') && (
         <div style={{ marginTop: '0.75rem' }}>
-          <label style={{ display: 'inline-flex', alignItems: 'center', color: '#1f2937', fontSize: '0.875rem' }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', color: '#1f2937', fontSize: '1rem' }}>
             <input type="checkbox" checked={femalesOnly} onChange={e => setFemalesOnly(e.target.checked)} style={{ marginRight: '0.5rem' }} />
             Females only ride
           </label>
         </div>
       )}
       <div style={{ marginTop: '0.75rem' }}>
-        <label style={{ display: 'block', fontSize: '0.875rem', color: '#374151', marginBottom: '0.25rem' }}>Vehicle Type</label>
+        <label style={{ display: 'block', fontSize: '1rem', color: '#374151', marginBottom: '0.25rem' }}>Vehicle Type</label>
         <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', color: '#111827' }}>
           <label style={{ display: 'inline-flex', alignItems: 'center', fontSize: '0.875rem' }}>
             <input type="radio" name="rtype" value="carpool" checked={rideType==='carpool'} onChange={()=>setRideType('carpool')} style={{ marginRight: '0.5rem' }} /> Car
@@ -164,7 +164,7 @@ export default function RideOfferForm() {
           style={{ 
             padding: '0.5rem 1.25rem', 
             borderRadius: '0.5rem', 
-            backgroundColor: '#1d4ed8', 
+            backgroundColor: '#e07d2e', 
             color: 'white', 
             border: 'none',
             fontWeight: '500', 

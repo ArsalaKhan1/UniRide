@@ -29,23 +29,22 @@ export default function RideHistory() {
   const completedRides = myRides.filter(r => r.status === 'completed')
 
   return (
-    <div style={{marginRight: 'auto', padding: '10px' }}>
-      <h2 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '32px', color: '#111827', textAlign: 'center' }}>Ride History</h2>
+    <div style={{padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
+      <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: '#e07d2e', textAlign: 'center' }}>Ride History</h2>
       {completedRides.length > 0 ? completedRides.map(ride => {
         return (
-          <div key={ride.rideID} style={{ margin: '24px 0 24px 100px', padding: '32px', backgroundColor: '#f3f4f6', borderRadius: '24px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', border: '2px solid #e5e7eb', maxWidth: '800px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ fontSize: '20px', fontWeight: '600', color: '#111827' }}>Ride - {ride.from} to {ride.to}</div>
-                <div style={{ fontSize: '14px', color: '#4b5563', marginTop: '4px' }}>
-                  Type: {ride.rideType} | Lead: {ride.leadUserName || ride.leadUserID} |
-                  Status: <span style={{ fontWeight: '600', color: '#6b7280' }}>COMPLETED</span>
-                </div>
+          <div key={ride.rideID} style={{ margin: '1.5rem 0', padding: '1.5rem', backgroundColor: '#ffffff', borderRadius: '1rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', border: '3px solid #e07d2e' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+              <div style={{ flex: 1, textAlign: 'left' }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#e07d2e', marginBottom: '0.5rem' }}>{ride.from} → {ride.to}</div>
+                <div style={{ fontSize: '0.95rem', color: '#6b7280', marginBottom: '0.25rem' }}><strong>Type:</strong> {ride.rideType}</div>
+                <div style={{ fontSize: '0.95rem', color: '#6b7280', marginBottom: '0.25rem' }}><strong>Lead:</strong> {ride.leadUserName || ride.leadUserID}</div>
+                <div style={{ fontSize: '0.95rem', color: '#10b981', fontWeight: '600' }}>✓ COMPLETED</div>
               </div>
             </div>
           </div>
         )
-      }) : <div style={{ margin: '24px 0 24px 100px', color: '#4b5563', fontSize: '16px' }}>{loading ? 'Loading your rides…' : 'No completed rides yet.'}</div>}
+      }) : <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280', fontSize: '1rem' }}>{loading ? 'Loading your rides…' : 'No completed rides yet.'}</div>}
     </div>
   )
 }

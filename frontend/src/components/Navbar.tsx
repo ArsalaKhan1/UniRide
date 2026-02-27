@@ -16,7 +16,7 @@ export default function Navbar() {
   return (
     <>
       <nav style={{
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(10px)',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
         position: 'sticky',
@@ -26,19 +26,21 @@ export default function Navbar() {
         <div style={{
           maxWidth: '1200px',
           margin: '0 auto',
-          padding: '0.75rem 1.5rem',
+          padding: '0.5rem 1rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
         }}>
           <Link to="/" style={{
-            color: '#1e40af',
-            fontWeight: 800,
-            fontSize: '2.25rem',
             textDecoration: 'none',
-            transition: 'opacity 0.3s'
+            transition: 'opacity 0.3s',
+            display: 'flex',
+            alignItems: 'center'
           }} onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'} onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
-            UniRide
+            <img src="/logo.png" alt="UniRide Logo" style={{
+              height: '55px',
+              width: 'auto'
+            }} />
           </Link>
           
           <div>
@@ -49,7 +51,7 @@ export default function Navbar() {
                   width: '40px',
                   height: '40px',
                   borderRadius: '50%',
-                  backgroundColor: '#1e40af',
+                  backgroundColor: '#e07d2e',
                   color: 'white',
                   display: 'flex',
                   alignItems: 'center',
@@ -59,22 +61,26 @@ export default function Navbar() {
                   cursor: 'pointer',
                   transition: 'background-color 0.3s'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a8a'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1e40af'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c96b1f'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#e07d2e'}
               >
                 {user.name.charAt(0).toUpperCase()}
               </div>
             ) : (
-              <button style={{
-                padding: '0.375rem 1rem',
-                borderRadius: '0.75rem',
-                backgroundColor: '#1e40af',
-                color: 'white',
-                border: 'none',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'background-color 0.3s'
-              }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a8a'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1e40af'}>
+              <button 
+                style={{
+                  padding: '0.375rem 1rem',
+                  borderRadius: '0.75rem',
+                  backgroundColor: '#e07d2e',
+                  color: 'white',
+                  border: 'none',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'background-color 0.3s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c96b1f'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#e07d2e'}
+              >
                 Sign in
               </button>
             )}
@@ -106,7 +112,7 @@ export default function Navbar() {
         right: 0,
         bottom: 0,
         width: '300px',
-        backgroundColor: 'white',
+        backgroundColor: '#ffffff',
         boxShadow: '-2px 0 8px rgba(0, 0, 0, 0.15)',
         zIndex: 51,
         transform: sidebarOpen ? 'translateX(0)' : 'translateX(100%)',
@@ -154,7 +160,8 @@ export default function Navbar() {
               width: '100%',
               padding: '0.75rem',
               marginBottom: '0.75rem',
-              backgroundColor: '#dbeafe',
+              backgroundColor: '#a9abab',
+              color: 'white',
               border: 'none',
               borderRadius: '0.5rem',
               fontSize: '1rem',
@@ -162,8 +169,8 @@ export default function Navbar() {
               cursor: 'pointer',
               transition: 'background-color 0.3s'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#bfdbfe'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#dbeafe'}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#92949e'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#a9abab'}
           >
             Rides
           </button>
@@ -176,7 +183,8 @@ export default function Navbar() {
             style={{
               width: '100%',
               padding: '0.75rem',
-              backgroundColor: '#dbeafe',
+              backgroundColor: '#a9abab',
+              color: 'white',
               border: 'none',
               borderRadius: '0.5rem',
               fontSize: '1rem',
@@ -184,8 +192,8 @@ export default function Navbar() {
               cursor: 'pointer',
               transition: 'background-color 0.3s'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#bfdbfe'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#dbeafe'}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#92949e'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#a9abab'}
           >
             Ride History
           </button>
@@ -198,7 +206,7 @@ export default function Navbar() {
             style={{
               width: '100%',
               padding: '0.75rem',
-              backgroundColor: '#1e40af',
+              backgroundColor: '#e07d2e',
               color: 'white',
               border: 'none',
               borderRadius: '0.5rem',
@@ -207,8 +215,8 @@ export default function Navbar() {
               cursor: 'pointer',
               transition: 'background-color 0.3s'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a8a'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1e40af'}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c96b1f'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#e07d2e'}
           >
             Logout
           </button>

@@ -5,8 +5,8 @@ html, body, #root {
 body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   margin: 0;
-  background: #dbeafe; /* light blue instead of gray-100 */
-  color: #112b63; /* gray-900 */
+  background: #faf8f5; /* off-white background */
+  color: #111827; /* primary dark text */
 }
 
 .container {
@@ -61,12 +61,12 @@ body {
 }
 
 .bg-blue-200 {
-  background-color: #bfdbfe;
+  background-color: #f5ede4;
 }
 
 /* Border colors */
 .border-blue-200 {
-  border-color: #bfdbfe;
+  border-color: #e07d2e;
 }
 
 .border-blue-300 {
@@ -75,24 +75,24 @@ body {
 
 /* Text colors */
 .text-blue-600 {
-  color: #2563eb;
+  color: #e07d2e;
 }
 
 .text-blue-700 {
-  color: #1d4ed8;
+  color: #c96b1f;
 }
 
-/* Enhanced blue colors for buttons */
+/* Enhanced orange colors for buttons */
 .bg-blue-700 {
-  background-color: #1d4ed8;
+  background-color: #e07d2e;
 }
 
 .bg-blue-800 {
-  background-color: #1e40af;
+  background-color: #c96b1f;
 }
 
 .hover\:bg-blue-800:hover {
-  background-color: #1e40af;
+  background-color: #c96b1f;
 }
 
 /* Border radius */
@@ -119,7 +119,7 @@ body {
 
 /* Background colors */
 .bg-green-50 {
-  background-color: #dbeafe;
+  background-color: #f5ede4;
 }
 
 .bg-red-50 {

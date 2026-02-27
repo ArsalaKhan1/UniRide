@@ -129,10 +129,10 @@ export default function CurrentRide({ onRideEnded }: CurrentRideProps) {
           {activePassengerRides.map(ride => {
             const rideStatus = ride.status || 'open'
             const isCompleted = rideStatus === 'completed'
-            const statusColor = rideStatus === 'started' ? '#059669' : rideStatus === 'completed' ? '#6b7280' : '#2563eb'
+            const statusColor = rideStatus === 'started' ? '#059669' : rideStatus === 'completed' ? '#6b7280' : '#e07d2e'
 
             return (
-              <div key={ride.rideID} style={{ margin: '16px 0', padding: '24px', backgroundColor: '#f0fdf4', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '2px solid #bbf7d0' }}>
+              <div key={ride.rideID} style={{ margin: '16px 0', padding: '24px', backgroundColor: '#ffffff', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '2px solid #a9abab' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
                     <div style={{ fontSize: '18px', fontWeight: '600', color: '#111827' }}>Ride - {ride.from} to {ride.to}</div>
@@ -146,7 +146,7 @@ export default function CurrentRide({ onRideEnded }: CurrentRideProps) {
                   {!isCompleted && (
                     <button
                       onClick={() => navigate(`/chat/${ride.rideID}`)}
-                      style={{ padding: '10px 20px', border: 'none', borderRadius: '12px', fontWeight: '500', cursor: 'pointer', fontSize: '14px', backgroundColor: '#2563eb', color: 'white' }}
+                      style={{ padding: '10px 20px', border: 'none', borderRadius: '12px', fontWeight: '500', cursor: 'pointer', fontSize: '14px', backgroundColor: '#e07d2e', color: 'white' }}
                     >
                       Open Chat
                     </button>
@@ -170,10 +170,10 @@ export default function CurrentRide({ onRideEnded }: CurrentRideProps) {
         const canStart = !isStarted && !isCompleted
         const canEnd = isStarted && !isCompleted
         const showChat = (hasAccepted || hasPendingRequests || isStarted) && !isCompleted
-        const statusColor = rideStatus === 'started' ? '#059669' : rideStatus === 'completed' ? '#6b7280' : '#2563eb'
+        const statusColor = rideStatus === 'started' ? '#059669' : rideStatus === 'completed' ? '#6b7280' : '#e07d2e'
 
         return (
-          <div key={ride.rideID} style={{ margin: '24px 0', padding: '32px', backgroundColor: '#dbeafe', borderRadius: '24px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', border: '2px solid #bfdbfe' }}>
+          <div key={ride.rideID} style={{ margin: '24px 0', padding: '32px', backgroundColor: '#ffffff', borderRadius: '24px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', border: '2px solid #a9abab' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div>
                 <div style={{ fontSize: '20px', fontWeight: '600', color: '#111827' }}>Ride - {ride.from} to {ride.to}</div>
@@ -206,7 +206,7 @@ export default function CurrentRide({ onRideEnded }: CurrentRideProps) {
                 {showChat && (
                   <button
                     onClick={() => navigate(`/chat/${ride.rideID}`)}
-                    style={{ padding: '10px 20px', border: 'none', borderRadius: '12px', fontWeight: '500', cursor: 'pointer', fontSize: '14px', backgroundColor: '#2563eb', color: 'white' }}
+                    style={{ padding: '10px 20px', border: 'none', borderRadius: '12px', fontWeight: '500', cursor: 'pointer', fontSize: '14px', backgroundColor: '#e07d2e', color: 'white' }}
                   >
                     Open Chat
                   </button>
@@ -214,7 +214,7 @@ export default function CurrentRide({ onRideEnded }: CurrentRideProps) {
               </div>
             </div>
             {accepted.length > 0 && (
-              <div style={{ marginBottom: '16px', padding: '20px', backgroundColor: '#f0fdf4', borderRadius: '12px', border: '2px solid #bbf7d0' }}>
+              <div style={{ marginBottom: '16px', padding: '20px', backgroundColor: '#ffffff', borderRadius: '12px', border: '2px solid #a9abab' }}>
                 <div style={{ fontWeight: '600', color: '#065f46', marginBottom: '8px' }}>
                   Accepted Passengers ({accepted.length}):
                 </div>
@@ -233,7 +233,7 @@ export default function CurrentRide({ onRideEnded }: CurrentRideProps) {
                 <div style={{ marginTop: '16px', fontWeight: '600', color: '#1f2937', marginBottom: '12px' }}>Pending join requests:</div>
                 <ul style={{ marginTop: '8px', listStyle: 'none', padding: 0 }}>
                   {pendingRequests[ride.rideID].map((req: any) => (
-                    <li key={req.userID} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', backgroundColor: '#dcfce7', borderRadius: '12px', border: '2px solid #bfdbfe', marginBottom: '12px' }}>
+                    <li key={req.userID} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', backgroundColor: '#ffffff', borderRadius: '12px', border: '2px solid #a9abab', marginBottom: '12px' }}>
                       <span style={{ color: '#111827', fontWeight: '500' }}>User: {req.userName || req.userID}</span>
                       <div style={{ display: 'flex', gap: '12px' }}>
                         <button onClick={() => handleRespond(ride.rideID, req.userID, true)} style={{ padding: '8px 16px', backgroundColor: '#d1fae5', color: '#065f46', borderRadius: '12px', fontWeight: '500', border: 'none', cursor: 'pointer' }}>Accept</button>
